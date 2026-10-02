@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>スクリーニング演習室</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ---- onboarding / 本番用追加スタイル ---- */
+.ob-overlay{position:fixed; inset:0; z-index:100; background:var(--bg); overflow:auto; display:flex; justify-content:center; padding:32px 16px;}
+.ob-card{background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); max-width:760px; width:100%; padding:32px 36px; align-self:flex-start;}
+.ob-card h1{font-size:22px; margin:0 0 4px;}
+.ob-card .ob-sub{color:var(--muted); font-size:13px; margin:0 0 20px;}
+.ob-card h2{font-size:15px; margin:22px 0 8px; padding-left:10px; border-left:4px solid var(--accent-strong);}
+.ob-card p, .ob-card li{font-size:14px; line-height:1.85;}
+.ob-card ul{margin:6px 0; padding-left:22px;}
+.ob-note{background:var(--surface-2); border:1px solid var(--border-soft); border-radius:10px; padding:12px 16px; margin:10px 0;}
+.ob-form{margin-top:26px; padding-top:20px; border-top:1px solid var(--border);}
+.ob-form label{display:block; font-size:13px; margin-bottom:6px; font-weight:700;}
+.ob-form input[type=text]{width:100%; max-width:320px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:15px;}
+.ob-consent{display:flex; gap:8px; align-items:flex-start; margin:14px 0; font-size:13px; line-height:1.7;}
+.ob-start{margin-top:6px; padding:12px 28px; border:none; border-radius:10px; background:var(--accent-strong); color:#fff; font-size:15px; font-weight:700; cursor:pointer;}
+.ob-start:disabled{opacity:.4; cursor:not-allowed;}
+.pdf-frame{padding:8px; border:1px solid var(--border); border-radius:10px; background:var(--surface-2); margin-top:6px;}
+.pdf-embed{display:block; width:100%; height:520px; border:0; border-radius:6px; background:#fff;}
+.sync-note{margin-top:16px; font-size:12px; color:var(--muted);}
+.dl-btn{margin-top:12px; padding:8px 16px; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; font-size:13px;}
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --surface-2:#f6f7fa; --surface-3:#eceef2;
+  --border:#dfe2e9; --border-soft:#e9ebf0;
+  --ink:#1a1f2b; --ink-soft:#525a6b; --muted:#8991a1;
+  --accent:#2f5fd6; --accent-ink:#ffffff; --accent-soft:#e8edfd; --accent-strong:#1f46b0;
+  --safe:#1a8a4f; --safe-soft:#e5f6ec; --safe-line:#bfe6cd;
+  --danger:#c8362b; --danger-soft:#fbe9e7; --danger-line:#f0c1bb;
+  --warn:#a4670f; --warn-soft:#fbf1de; --warn-line:#eeda ;
+  --focus:#2f5fd6;
+  --shadow:0 1px 2px rgba(20,24,35,.06), 0 8px 24px -12px rgba(20,24,35,.18);
+  color-scheme:light;
+  font-family:"Noto Sans JP","Zen Kaku Gothic New",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10131a; --surface:#171b25; --surface-2:#1c212c; --surface-3:#222834;
+    --border:#2b3242; --border-soft:#242a37;
+    --ink:#e8eaf1; --ink-soft:#b0b7c6; --muted:#727b8d;
+    --accent:#6f92f5; --accent-ink:#0d1526; --accent-soft:#1c2740; --accent-strong:#9db3f7;
+    --safe:#49c987; --safe-soft:#12291d; --safe-line:#1f4530;
+    --danger:#ff8478; --danger-soft:#331714; --danger-line:#57241f;
+    --warn:#e3b356; --warn-soft:#332a12; --warn-line:#4a3c1c;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 28px -12px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10131a; --surface:#171b25; --surface-2:#1c212c; --surface-3:#222834;
+  --border:#2b3242; --border-soft:#242a37;
+  --ink:#e8eaf1; --ink-soft:#b0b7c6; --muted:#727b8d;
+  --accent:#6f92f5; --accent-ink:#0d1526; --accent-soft:#1c2740; --accent-strong:#9db3f7;
+  --safe:#49c987; --safe-soft:#12291d; --safe-line:#1f4530;
+  --danger:#ff8478; --danger-soft:#331714; --danger-line:#57241f;
+  --warn:#e3b356; --warn-soft:#332a12; --warn-line:#4a3c1c;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 28px -12px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0;background:var(--bg);color:var(--ink);padding-inline:0;}
+::selection{background:var(--accent-soft);color:var(--ink);}
+button{font-family:inherit;}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;}
+
+/* ---------- app shell ---------- */
+.app{
+  display:flex; flex-direction:column;
+  height:100%;
+  max-width:1240px; margin:0 auto;
+  padding-inline:16px;
+}
+.topbar{
+  display:flex; align-items:center; gap:14px;
+  padding-block:12px;
+  flex-wrap:wrap;
+}
+.brand{display:flex; align-items:center; gap:10px; margin-right:auto;}
+.brand-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(155deg,var(--accent),var(--accent-strong));
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent-ink); font-weight:900; font-size:15px; font-family:"Zen Kaku Gothic New";
+  flex:none;
+}
+.brand-text{display:flex; flex-direction:column; line-height:1.25;}
+.brand-text b{font-family:"Zen Kaku Gothic New"; font-size:15px; font-weight:700;}
+.brand-text span{font-size:11.5px; color:var(--muted);}
+
+.tabs{
+  display:flex; gap:4px; padding:4px; background:var(--surface-2);
+  border:1px solid var(--border-soft); border-radius:11px;
+}
+.tab{
+  border:none; background:transparent; color:var(--ink-soft);
+  padding:7px 14px; border-radius:8px; font-size:13.5px; font-weight:500;
+  cursor:pointer; display:flex; align-items:center; gap:7px;
+  transition:background .15s, color .15s;
+}
+.tab:hover{color:var(--ink);}
+.tab[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow);}
+.tab .count{
+  font-family:"JetBrains Mono"; font-size:10.5px; font-weight:600;
+  background:var(--surface-3); color:var(--muted); border-radius:20px; padding:1px 6px;
+  min-width:18px; text-align:center;
+}
+.tab[aria-selected="true"] .count{background:var(--accent-soft); color:var(--accent-strong);}
+
+.mode-switch{
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface-2); border:1px solid var(--border-soft); border-radius:11px;
+  padding:5px 6px 5px 12px;
+}
+.mode-switch .lbl{font-size:11px; color:var(--muted); font-weight:600; letter-spacing:.02em;}
+.mode-btn{
+  border:1px solid transparent; background:transparent; color:var(--ink-soft);
+  font-size:13px; font-weight:600; padding:6px 12px; border-radius:8px; cursor:pointer;
+}
+.mode-btn.active{background:var(--surface); color:var(--accent-strong); border-color:var(--border); box-shadow:var(--shadow);}
+
+.progress-chip{
+  display:flex; align-items:center; gap:8px;
+  font-size:12.5px; color:var(--ink-soft); font-weight:500;
+  background:var(--surface); border:1px solid var(--border); border-radius:20px;
+  padding:6px 12px;
+}
+.progress-chip .bar{width:64px; height:5px; border-radius:3px; background:var(--surface-3); overflow:hidden;}
+.progress-chip .bar>i{display:block; height:100%; background:var(--accent); border-radius:3px;}
+
+/* ---------- panels ---------- */
+.stage{flex:1; min-height:0; padding-bottom:16px; display:flex; flex-direction:column;}
+
+/* inbox layout */
+.inbox{display:flex; gap:14px; flex:1; min-height:0;}
+.list-col{
+  width:340px; flex:none;
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow);
+  transition:width .15s;
+}
+.list-col.wide{width:460px;}
+.list-head{
+  padding:13px 15px 11px; border-bottom:1px solid var(--border-soft);
+  display:flex; align-items:baseline; justify-content:space-between;
+}
+.list-head h2{font-family:"Zen Kaku Gothic New"; font-size:14px; margin:0;}
+.list-head span{font-size:11.5px; color:var(--muted);}
+.list{list-style:none; margin:0; padding:6px; overflow-y:auto; flex:1;}
+.item{
+  display:flex; flex-direction:column; gap:4px;
+  padding:10px 11px; border-radius:10px; cursor:pointer;
+  border:1px solid transparent;
+  margin-bottom:2px;
+}
+.item:hover{background:var(--surface-2);}
+.item.selected{background:var(--accent-soft); border-color:var(--border);}
+.item-top{display:flex; align-items:center; gap:7px;}
+.item-from{font-size:12.5px; font-weight:700; color:var(--ink); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.item-dot{width:6px; height:6px; border-radius:50%; background:var(--accent); flex:none;}
+.item-subject{font-size:12.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.item-meta{display:flex; align-items:center; gap:6px;}
+.pill{
+  font-size:10px; font-weight:700; letter-spacing:.03em; padding:2px 7px; border-radius:20px;
+  border:1px solid transparent;
+}
+.pill.answered-safe{background:var(--safe-soft); color:var(--safe); border-color:var(--safe-line);}
+.pill.answered-phish{background:var(--danger-soft); color:var(--danger); border-color:var(--danger-line);}
+.pill.unanswered{background:var(--surface-3); color:var(--muted);}
+
+.detail-col{
+  flex:1; min-width:0; display:flex; flex-direction:column; gap:12px; min-height:0;
+}
+.mail-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  box-shadow:var(--shadow); display:flex; flex-direction:column; flex:1; min-height:0;
+}
+.mail-head{padding:16px 20px; border-bottom:1px solid var(--border-soft);}
+.mail-head h1{font-family:"Zen Kaku Gothic New"; font-size:17px; margin:0 0 10px; line-height:1.4;}
+.mail-meta-row{display:flex; gap:10px; font-size:12.5px; color:var(--ink-soft); align-items:center; flex-wrap:wrap;}
+.mail-meta-row b{color:var(--ink); font-weight:600;}
+.addr{
+  font-family:"JetBrains Mono"; font-size:11.5px; background:var(--surface-2);
+  border:1px solid var(--border-soft); padding:2px 7px; border-radius:6px; color:var(--ink-soft);
+}
+.mail-body-wrap{flex:1; min-height:0; overflow-y:auto; padding:20px;}
+.mail-body{
+  font-size:14.5px; line-height:2; color:var(--ink); white-space:pre-wrap;
+  max-width:64ch;
+}
+.mail-link{
+  display:inline-flex; align-items:center; gap:7px; margin-top:14px; font-family:"JetBrains Mono"; font-size:12.5px;
+  color:var(--accent); cursor:pointer; user-select:none;
+}
+.mail-link:hover{filter:brightness(0.85);}
+.mail-link .ico{flex:none;}
+.mail-link, .mail-link:visited{text-decoration:underline;}
+.resource-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:14px;}
+.mail-link.pdf-icon-link{display:inline-block; text-decoration:none; margin-top:4px;}
+.mail-link.pdf-icon-link:hover{filter:brightness(0.95);}
+.resource-row .mail-link{margin-top:0;}
+.url-caution-note{flex:0 0 100%; background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn-line); border-radius:8px; padding:8px 12px; font-size:13px; line-height:1.5;}
+/* 右クリックで出す簡易コンテキストメニュー(実際のメールソフトの「リンクのアドレスをコピー」相当)。
+   専用の確認ボタンは置かず、右クリック操作の中だけに導線を用意する。 */
+.ctx-menu{
+  position:fixed; z-index:50; background:var(--surface); border:1px solid var(--border);
+  border-radius:8px; box-shadow:var(--shadow); padding:4px; min-width:200px; font-size:12.5px;
+}
+.ctx-menu button{
+  display:block; width:100%; text-align:left; padding:8px 11px; border:none; background:transparent;
+  color:var(--ink); cursor:pointer; border-radius:6px; font-size:12.5px; font-family:inherit;
+}
+.ctx-menu button:hover{background:var(--surface-2);}
+.copy-toast{
+  position:fixed; z-index:50; background:var(--ink); color:var(--bg); font-size:11.5px;
+  padding:7px 11px; border-radius:8px; box-shadow:var(--shadow); max-width:300px; word-break:break-all;
+}
+
+.from-name-btn{
+  border:none; background:transparent; padding:0; font:inherit; color:var(--ink); font-weight:600;
+  cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+}
+.from-name-btn .car{font-size:10px; color:var(--muted); transition:transform .15s;}
+.from-name-btn[aria-expanded="true"] .car{transform:rotate(90deg);}
+.addr-reveal{display:none;}
+.addr-reveal.show{display:inline-block;}
+.list-status-badge{
+  font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; border:1px solid; margin-left:2px;
+}
+.list-status-badge.wl{background:var(--safe-soft); color:var(--safe); border-color:var(--safe-line);}
+.list-status-badge.bl{background:var(--danger-soft); color:var(--danger); border-color:var(--danger-line);}
+
+/* AI judgment card */
+.ai-card{
+  border-top:1px solid var(--border-soft); padding:16px 20px 18px; background:var(--surface-2);
+  border-radius:0 0 14px 14px;
+}
+.ai-head{display:flex; align-items:center; justify-content:flex-start; gap:10px; margin-bottom:10px; flex-wrap:nowrap;}
+.ai-title{font-size:13px; font-weight:700; font-family:"Zen Kaku Gothic New"; white-space:nowrap; flex:none;}
+.verdict-pill{
+  display:flex; align-items:center; gap:6px; font-size:13px; font-weight:800;
+  padding:6px 13px; border-radius:20px; border:1px solid; white-space:nowrap; flex:none;
+}
+.verdict-pill.phish{background:var(--danger-soft); color:var(--danger); border-color:var(--danger-line);}
+.verdict-pill.safe{background:var(--safe-soft); color:var(--safe); border-color:var(--safe-line);}
+.confidence-row{margin-bottom:12px;}
+.confidence{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--ink-soft);}
+.confidence .track{width:74px; height:6px; border-radius:3px; background:var(--surface-3); overflow:hidden;}
+.confidence .track>i{display:block; height:100%; border-radius:3px;}
+.checklist-box{
+  background:var(--surface); border:1px dashed var(--border); border-radius:10px; padding:13px 14px; margin-bottom:10px;
+}
+.checklist-box p{margin:0 0 10px; font-size:13px; color:var(--ink-soft);}
+.checklist-items{display:flex; flex-direction:column; gap:8px;}
+.checklist-item{
+  display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--ink); cursor:pointer;
+  background:var(--surface-2); border:1px solid var(--border-soft); border-radius:8px; padding:8px 10px;
+}
+.checklist-item input{margin-top:2px; flex:none;}
+.checklist-item.checked{border-color:var(--accent); background:var(--accent-soft);}
+
+.reason-paragraph{
+  margin:0 0 10px; font-size:13px; line-height:1.95; color:var(--ink-soft);
+  background:var(--surface); border:1px solid var(--border-soft); border-radius:10px; padding:12px 14px;
+}
+.reason-emph{color:var(--warn); background:var(--warn-soft); padding:0 3px; border-radius:4px; font-weight:700;}
+.reason-summary{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  font-size:12.5px; color:var(--ink-soft); background:var(--surface); border:1px solid var(--border-soft);
+  border-radius:9px; padding:9px 12px; margin-bottom:10px;
+}
+.reason-toggle{
+  border:1px solid var(--border); background:var(--surface-2); color:var(--accent-strong);
+  font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:7px; cursor:pointer; flex:none;
+}
+
+.quiz-box{
+  background:var(--surface); border:1px dashed var(--border); border-radius:10px; padding:13px 14px; margin-bottom:10px;
+}
+.quiz-box p{margin:0 0 9px; font-size:13px; color:var(--ink-soft);}
+.quiz-textarea{
+  width:100%; box-sizing:border-box; resize:vertical; min-height:64px; font-size:13px; font-family:inherit;
+  border:1px solid var(--border); border-radius:8px; padding:9px 10px; color:var(--ink); background:var(--surface-2);
+}
+.quiz-textarea:disabled{opacity:.75; resize:none;}
+.quiz-actions{display:flex; justify-content:flex-end; margin-top:8px;}
+.quiz-submit-btn{
+  font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:8px; border:1px solid var(--accent);
+  background:var(--accent); color:var(--accent-ink); cursor:pointer;
+}
+.quiz-submit-btn:disabled{opacity:.4; cursor:not-allowed;}
+.quiz-feedback{margin-top:10px; font-size:12.5px; line-height:1.6; padding:9px 11px; border-radius:8px;}
+.quiz-feedback.ok{background:var(--accent-soft); color:var(--accent-strong);}
+.quiz-feedback.nudge{background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--border);}
+.quiz-reveal{margin-top:9px; font-size:12.5px; color:var(--ink-soft);}
+.answer-row-wrap.locked{display:none;}
+.quiz-lock-note{font-size:11.5px; color:var(--muted); margin-top:2px;}
+
+.agree-row{display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap;}
+.btn{
+  border:1px solid var(--border); background:var(--surface); color:var(--ink);
+  font-size:13px; font-weight:600; padding:9px 16px; border-radius:9px; cursor:pointer;
+  display:flex; align-items:center; gap:7px; transition:transform .08s, box-shadow .15s;
+}
+.btn:hover{box-shadow:var(--shadow);}
+.btn:active{transform:translateY(1px);}
+.btn-accent{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+.btn-ghost{background:transparent;}
+.btn:disabled{opacity:.45; cursor:not-allowed;}
+.btn:disabled:hover{box-shadow:none;}
+
+.answer-row{display:flex; gap:10px; margin-top:12px;}
+.answer-btn{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:13px 10px; border-radius:11px; border:1.5px solid var(--border); background:var(--surface);
+  cursor:pointer; font-family:"Zen Kaku Gothic New"; font-weight:700; font-size:13.5px; color:var(--ink-soft);
+}
+.answer-btn small{font-family:"Noto Sans JP"; font-weight:400; font-size:10.5px; color:var(--muted);}
+.answer-btn.safe:hover{border-color:var(--safe-line); background:var(--safe-soft); color:var(--safe);}
+.answer-btn.phish:hover{border-color:var(--danger-line); background:var(--danger-soft); color:var(--danger);}
+.answer-btn.chosen.safe{border-color:var(--safe); background:var(--safe-soft); color:var(--safe);}
+.answer-btn.chosen.phish{border-color:var(--danger); background:var(--danger-soft); color:var(--danger);}
+
+.empty-state{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:var(--muted); font-size:13px; gap:8px;
+}
+
+/* whitelist / blacklist */
+.list-panel{
+  background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+}
+.list-panel-head{
+  padding:16px 20px; border-bottom:1px solid var(--border-soft);
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+.list-panel-head h2{font-family:"Zen Kaku Gothic New"; font-size:15px; margin:0;}
+.list-panel-head p{margin:3px 0 0; font-size:12px; color:var(--muted);}
+.view-counter{
+  display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--border-soft);
+  border-radius:20px; padding:6px 13px; font-size:12px; color:var(--ink-soft); font-weight:600;
+}
+.view-counter b{font-family:"JetBrains Mono"; color:var(--accent-strong); font-size:13px;}
+.table-wrap{flex:1; overflow-y:auto; padding:6px 8px 14px;}
+table{width:100%; border-collapse:collapse; font-size:12.8px;}
+thead th{
+  position:sticky; top:0; background:var(--surface); text-align:left; font-weight:700; color:var(--muted);
+  font-size:11px; letter-spacing:.03em; padding:9px 12px; border-bottom:1px solid var(--border);
+}
+tbody td{padding:10px 12px; border-bottom:1px solid var(--border-soft); vertical-align:top;}
+tbody tr:hover{background:var(--surface-2);}
+td.domain{font-family:"JetBrains Mono"; font-weight:600; color:var(--ink);}
+td.cat{white-space:nowrap;}
+.cat-tag{font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px;}
+.cat-tag.wl{background:var(--safe-soft); color:var(--safe);}
+.cat-tag.bl{background:var(--danger-soft); color:var(--danger);}
+td.note{color:var(--ink-soft); font-size:12px; line-height:1.6;}
+.sample-tag{font-size:10px; color:var(--muted); font-weight:600;}
+
+/* log drawer */
+.log-fab{
+  position:fixed; right:16px; bottom:16px; z-index:20;
+  background:var(--surface); color:var(--muted); border:1px solid var(--border-soft); border-radius:50%;
+  width:34px; height:34px; padding:0; font-size:14px; cursor:pointer; box-shadow:var(--shadow);
+  display:flex; align-items:center; justify-content:center; opacity:.55; transition:opacity .15s;
+}
+.log-fab:hover{opacity:1;}
+.log-fab .dot{display:none;}
+.log-drawer{
+  position:fixed; right:20px; bottom:70px; z-index:20; width:340px; max-height:60vh;
+  background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);
+  display:none; flex-direction:column; overflow:hidden;
+}
+.log-drawer.open{display:flex;}
+.log-drawer-head{padding:12px 14px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; justify-content:space-between;}
+.log-drawer-head b{font-size:12.5px; font-family:"Zen Kaku Gothic New";}
+.log-drawer-head button{border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:16px; line-height:1;}
+.log-body{overflow-y:auto; padding:12px 14px; font-family:"JetBrains Mono"; font-size:11px; color:var(--ink-soft); display:flex; flex-direction:column; gap:10px;}
+.log-section b{display:block; color:var(--ink); font-size:10.5px; margin-bottom:5px; letter-spacing:.02em;}
+.log-kv{display:flex; justify-content:space-between; padding:2px 0;}
+.log-kv span:last-child{color:var(--ink);}
+.log-note{font-size:10px; color:var(--muted); line-height:1.6; font-family:"Noto Sans JP";}
+
+/* completion */
+.done-card{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); padding:40px 20px;
+}
+.done-card h2{font-family:"Zen Kaku Gothic New"; font-size:19px; margin:0;}
+.done-grid{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
+.stat{
+  background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:14px 20px; text-align:center; min-width:120px;
+}
+.stat b{display:block; font-family:"JetBrains Mono"; font-size:22px; color:var(--accent-strong);}
+.stat span{font-size:11px; color:var(--muted);}
+
+@media (max-width:860px){
+  .inbox{flex-direction:column;}
+  .list-col{width:100%; max-height:260px;}
+  .log-drawer{width:calc(100vw - 40px);}
+}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark" id="brandMark">AE</div>
+      <div class="brand-text">
+        <b>アオイ・エナジー セキュリティ運用</b>
+        <span>一次スクリーニング演習(全30件)</span>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" data-tab="inbox" aria-selected="true" role="tab">受信箱 <span class="count" id="inboxCount">0/30</span></button>
+      <button class="tab" data-tab="whitelist" role="tab">ホワイトリスト</button>
+      <button class="tab" data-tab="blacklist" role="tab">ブラックリスト</button>
+      <button class="tab" data-tab="dept" role="tab">部門</button>
+    </div>
+
+    <div class="progress-chip">
+      回答進捗
+      <div class="bar"><i id="progressBar" style="width:0%"></i></div>
+      <span id="progressText">0/30</span>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="inbox">
+      <div class="list-col" id="listCol">
+        <div class="list-head">
+          <h2>報告メール一覧</h2>
+          <span id="listSub">従業員からの報告分</span>
+        </div>
+        <ul class="list" id="mailList"></ul>
+      </div>
+      <div class="detail-col" id="detailCol"></div>
+    </div>
+  </div>
+</div>
+
+
+<div class="ob-overlay" id="obOverlay">
+  <div class="ob-card">
+    <h1>アオイ・エナジー セキュリティ運用演習</h1>
+    <p class="ob-sub">はじめにお読みください(所要時間の目安:約20〜30分)</p>
+
+    <h2>あなたの役割</h2>
+    <p>あなたは「<b>アオイ・エナジー株式会社</b>」の<b>情報セキュリティ担当者(ヘルプデスク要員)</b>です。社内の従業員から「怪しいかもしれない」と報告されたメールを確認し、安全なメールかフィッシングメールを判定する立場にあります。</p>
+
+    <h2>タスク</h2>
+    <p>従業員から報告されたメール(全30件)について、AIの支援を受けながら、それぞれ<b>「安全」</b>か<b>「フィッシング」</b>かを判定してください。</p>
+    <div class="ob-note">
+      <ul>
+        <li>表示されるメールは、<b>あなた自身の受信箱に届いたものではありません</b>。他の利用者(従業員)が受け取り、報告してきたメールです。</li>
+        <li>メールの送信元と<b>個人的な面識があるかどうかは、判断に使わないでください</b>。文面・件名・送信元アドレス・リンクなど、メールの<b>構造的な特徴</b>に基づいて判定してください。</li>
+        <li>正解・不正解は、判定の途中では表示されません。</li>
+      </ul>
+    </div>
+
+    <h2>画面の使い方</h2>
+    <ul>
+      <li>左の「報告メール一覧」からメールを選ぶと、右側に本文とAIの判定が表示されます。</li>
+      <li>差出人の名前をクリックすると、送信元のメールアドレスが表示されます。</li>
+      <li>上部のタブ(<b>ホワイトリスト / ブラックリスト / 部門</b>)で、社内で管理している参考情報を確認できます。</li>
+      <li>メールにPDFが添付されている場合は、本文の下部に表示されます。リンクや添付ファイルを開きたいときは、ダブルクリックしてください(PDFはそのまま表示されます)。</li>
+      <li>判定は、画面下部の「安全」「フィッシング」のボタンで回答します。すべてのメールに回答すると終了です。</li>
+    </ul>
+
+    <h2>データの取り扱い</h2>
+    <p>この演習では、回答内容や操作の記録(回答時間など)を、研究目的で収集します。個人が特定される形で公表することはありません。</p>
+
+    <div class="ob-form">
+      <label for="obPid">参加者ID(配布された場合は、その番号を入力してください)</label>
+      <input type="text" id="obPid" autocomplete="off" maxlength="40" placeholder="例:P001">
+      <label class="ob-consent"><input type="checkbox" id="obConsent"> <span>上記の内容を理解し、データの収集に同意したうえで、演習を開始します。</span></label>
+      <button class="ob-start" id="obStart" type="button" disabled>演習を開始する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 運用者用の確認パネル。参加者向けフローには影響しない控えめな角ボタンから開閉する。 -->
+<button class="log-fab" id="logFab" type="button" title="運用者用メニュー" style="display:none"><span class="dot"></span>⚙</button>
+<div class="log-drawer" id="logDrawer">
+  <div class="log-drawer-head"><b>[運用者用] 記録データモニタ</b><button id="logClose">✕</button></div>
+  <div id="devModeRow" style="padding:10px 14px 0; display:flex; gap:6px; display:none;">
+    <button class="mode-btn active" id="devModeStatic" data-mode="static" style="border:1px solid var(--border);">静的で確認</button>
+    <button class="mode-btn" id="devModeDynamic" data-mode="dynamic" style="border:1px solid var(--border);">動的で確認</button>
+  </div>
+  <div style="padding:10px 14px 0;"><button class="dl-btn" id="opsCsv" type="button">この端末の記録をCSVで保存</button></div>
+  <div class="log-body" id="logBody"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var EMAILS = [{"row": 27, "id": "aoi-027", "label": "安全", "subject": "センサー基板 修理完了のご連絡", "body": "中央計装工業です。\nお預かりしておりましたセンサー基板の修理が完了いたしましたのでご連絡いたします。\n返送手配を進めさせていただきます。", "fromName": "中央計装工業株式会社", "fromAddr": "support@chuo-keiso.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインが、自社の正規ドメインとは異なる第三者配信用の形式になっています"], "aiVerdictPhishing": true, "aiWrong": true, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 53, "id": "aoi-053", "label": "フィッシング", "subject": "安全点検報告書 添付のご確認", "body": "技術部各位\n先日の安全点検報告書を添付いたします。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 技術部(受付時間 9:00〜18:00、土日祝を除く)", "fromName": "アオイ・エナジー株式会社 技術部", "fromAddr": "notice@file-delivery-notice.net", "linkText": "点検報告書_詳細.pdf", "actualUrl": "file-delivery-notice.net/点検報告書_詳細.pdf.html", "reasonPhrases": ["文面は通常の業務連絡と同様の丁寧な言い回しで書かれています", "送信元のドメイン表記に、大きな違和感は見られません"], "aiVerdictPhishing": false, "aiWrong": true, "wlBlBasis": false, "pdfFile": null, "htmlFile": "r/2b38240609b2.html", "resourcePath": "r/2b38240609b2.html", "resourceLabel": "点検報告書_詳細.pdf", "pdfDisplay": null}, {"row": 46, "id": "aoi-046", "label": "フィッシング", "subject": "プラント技術者向け:高待遇エンジニア案件のご紹介", "body": "アオイ・エナジー社員の皆様へ\n発電・プラント技術者向けの好待遇案件をご紹介します。\n未経験でも高収入が可能です。詳細は下記リンクからご確認ください。", "fromName": "(表示名なし)", "fromAddr": "recruit@career-opportunities-now.net", "linkText": "詳しくはこちら", "actualUrl": "career-opportunities-now.net/job_offer.html", "reasonPhrases": ["文面は通常の業務連絡と同様の丁寧な言い回しで書かれています"], "aiVerdictPhishing": false, "aiWrong": true, "wlBlBasis": true, "pdfFile": null, "htmlFile": "r/df3620e17ddc.html", "resourcePath": "r/df3620e17ddc.html", "resourceLabel": "詳しくはこちら", "pdfDisplay": null}, {"row": 24, "id": "aoi-024", "label": "安全", "subject": "来期LNG定期契約 条件のご相談", "body": "東京LNGトレーディングです。\n来期のLNG定期契約について、現行契約からの条件変更案をご相談させてください。\nお打ち合わせのお時間をいただけますと幸いです。", "fromName": "東京LNGトレーディング株式会社", "fromAddr": "trade@tokyo-lng-trading.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインが、自社の正規ドメインとは異なる第三者配信用の形式になっています"], "aiVerdictPhishing": true, "aiWrong": true, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 44, "id": "aoi-044", "label": "フィッシング", "subject": "おめでとうございます!社員限定特別抽選に当選しました", "body": "アオイ・エナジー社員様限定の特別抽選キャンペーンにご当選されました!\n賞金30万円相当のギフトカードをお受け取りいただけます。\n今すぐ下記リンクよりお手続きください。本企画への参加には18歳以上である必要があります。", "fromName": "(表示名なし)", "fromAddr": "info@prize-notification.net", "linkText": "詳しくはこちら", "actualUrl": "prize-notification.net/prize_win.html", "reasonPhrases": ["受信者が心当たりのない、一方的な当選・勧誘の体裁になっています"], "aiVerdictPhishing": true, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": "r/6e1cdb92f536.html", "resourcePath": "r/6e1cdb92f536.html", "resourceLabel": "詳しくはこちら", "pdfDisplay": null}, {"row": 25, "id": "aoi-025", "label": "安全", "subject": "LNG船積みスケジュールのご連絡", "body": "東京LNGトレーディングです。\n今月のLNG船積みスケジュールが確定いたしましたのでご連絡いたします。\n入港予定日は添付の通りです。", "fromName": "東京LNGトレーディング株式会社", "fromAddr": "trade@tokyo-lng-trading.co.jp", "linkText": "船積み予定日.pdf", "actualUrl": "aoi_025_lng_funazumi_schedule.pdf", "reasonPhrases": ["送信元のドメインは、登録済みの正規取引先のものと一致しています"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": "r/d934ada72c91.pdf", "htmlFile": null, "resourcePath": "r/d934ada72c91.pdf", "resourceLabel": "船積み予定日.pdf", "pdfDisplay": "lng_funazumi_schedule.pdf"}, {"row": 12, "id": "aoi-012", "label": "安全", "subject": "エネルギー業界動向レポート(月次)配信のお知らせ", "body": "クラウド配信サービスです。\nアオイ・エナジー様がご登録されているエネルギー業界動向レポートの最新号を添付いたします。\n今号は電力先物市場の値動きと再生可能エネルギー政策の動向を特集しております。", "fromName": "クラウド配信サービス", "fromAddr": "news@mail-cloud-svc.jp", "linkText": "最新号.pdf", "actualUrl": "aoi_012_report_energy_trend.pdf", "reasonPhrases": ["送信元のドメインが、自社の正規ドメインとは異なる第三者配信用の形式になっています"], "aiVerdictPhishing": true, "aiWrong": true, "wlBlBasis": true, "pdfFile": "r/1cc5a56cd575.pdf", "htmlFile": null, "resourcePath": "r/1cc5a56cd575.pdf", "resourceLabel": "最新号.pdf", "pdfDisplay": "report_energy_trend.pdf"}, {"row": 20, "id": "aoi-020", "label": "安全", "subject": "証拠金残高のご案内(定例)", "body": "関東エネルギー取引所です。\n貴社口座の証拠金残高について、定例のご案内をお送りいたします。\n現在の残高は必要水準を十分に満たしております。詳細は別途郵送いたします。\nご不明点がございましたらお気軽にお問い合わせください。\n\n関東エネルギー取引所 営業部\n受付時間:8:30〜17:00(土日祝を除く)\n発行元:関東エネルギー取引所\n東京都中央区日本橋一丁目1番1号", "fromName": "関東エネルギー取引所", "fromAddr": "member@kanto-energy-exchange.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインは、登録済みの正規取引先のものと一致しています"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 45, "id": "aoi-045", "label": "フィッシング", "subject": "社員限定モニター募集キャンペーン", "body": "アオイ・エナジー社員の皆様\n新型計測機器のモニターにご当選された方に、豪華賞品をプレゼントいたします!\n今すぐエントリーして特典をゲットしましょう。", "fromName": "(表示名なし)", "fromAddr": "campaign@prize-notification.net", "linkText": "詳しくはこちら", "actualUrl": "prize-notification.net/monitor_campaign.html", "reasonPhrases": ["受信者が心当たりのない、一方的な当選・勧誘の体裁になっています"], "aiVerdictPhishing": true, "aiWrong": false, "wlBlBasis": false, "pdfFile": null, "htmlFile": "r/e6c6495233f3.html", "resourcePath": "r/e6c6495233f3.html", "resourceLabel": "詳しくはこちら", "pdfDisplay": null}, {"row": 16, "id": "aoi-016", "label": "安全", "subject": "月次請求書送付のご案内", "body": "北関東パワートレーディングです。\n────────────────────────────────────────\n11月分の電力先物取引に関する請求書を添付いたしましたのでご確認ください。\nお支払い期限は請求書記載の通りとなります。\n────────────────────────────────────────\n■ お問い合わせ窓口\n北関東パワートレーディング株式会社 経理部\n受付時間:9:00〜17:30(土日祝を除く)\n\n発行元:北関東パワートレーディング株式会社\n群馬県前橋市大手町二丁目1番1号\nhttps://www.nk-power-trading.co.jp", "fromName": "北関東パワートレーディング株式会社", "fromAddr": "contact@nk-power-trading.co.jp", "linkText": "請求書.pdf", "actualUrl": "aoi_016_seikyusho_11gatsu.pdf", "reasonPhrases": ["送信元のドメインは、登録済みの正規取引先のものと一致しています"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": "r/2570fee86164.pdf", "htmlFile": null, "resourcePath": "r/2570fee86164.pdf", "resourceLabel": "請求書.pdf", "pdfDisplay": "seikyusho_11gatsu.pdf"}, {"row": 3, "id": "aoi-003", "label": "安全", "subject": "【システム通知】取引システム メンテナンスのお知らせ", "body": "情報システム部です。\n今週土曜日深夜、電力先物取引システムの定期メンテナンスを実施します。\nメンテナンス中は発注機能がご利用いただけません。本メールは自動送信されています。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 情報システム部(受付時間 9:00〜18:00、土日祝を除く)", "fromName": "アオイ・エナジー株式会社 情報システム部", "fromAddr": "it-support@aoi-energy.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインは自社の正規ドメインと一致しており、社内からの送信と判断できます"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 10, "id": "aoi-010", "label": "安全", "subject": "発電設備メンテナンス費用 御見積書の送付", "body": "関西プラントエンジニアリング株式会社です。\n先日ご依頼いただいた第2発電所の定期メンテナンスについて、御見積書を添付いたします。\n内容をご確認のうえ、ご不明点がございましたらお気軽にお問い合わせください。\n\nお問い合わせ窓口:関西プラントエンジニアリング株式会社 営業部(受付時間 9:00〜17:30、土日祝を除く)\n\n発行元:関西プラントエンジニアリング株式会社\n大阪府大阪市北区梅田三丁目1番1号\nhttps://www.kansai-plant-eng.co.jp", "fromName": "関西プラントエンジニアリング株式会社", "fromAddr": "info@kansai-plant-eng.co.jp", "linkText": "見積書.pdf", "actualUrl": "aoi_010_mitsumorisho.pdf", "reasonPhrases": ["送信元のドメインは、登録済みの正規取引先のものと一致しています"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": "r/2551f2d847ec.pdf", "htmlFile": null, "resourcePath": "r/2551f2d847ec.pdf", "resourceLabel": "見積書.pdf", "pdfDisplay": "mitsumorisho.pdf"}, {"row": 55, "id": "aoi-055", "label": "フィッシング", "subject": "取引先へのお支払い方法変更のお願い", "body": "いつもお世話になっております。\n経理体制変更に伴い、今後のお支払い先口座を変更させていただきます。\n新しい振込先情報を添付いたしますので、次回よりこちらへお振込みください。", "fromName": "お取引先 経理部", "fromAddr": "accounting@invoice-payment-notice.com", "linkText": "―(本文中にリンクなし)", "actualUrl": null, "reasonPhrases": ["文面は通常の業務連絡と同様の丁寧な言い回しで書かれています"], "aiVerdictPhishing": false, "aiWrong": true, "wlBlBasis": true, "pdfFile": "r/83406d516926.pdf", "htmlFile": null, "resourcePath": "r/83406d516926.pdf", "resourceLabel": "―(本文中にリンクなし)", "pdfDisplay": "shiharai_henkou.pdf"}, {"row": 36, "id": "aoi-036", "label": "フィッシング", "subject": "系統連系申請システム ログイン情報の再確認", "body": "情報システム部です。\n先日のシステムメンテナンスの影響で、系統連系申請システムの認証情報に不整合が生じております。\nお手数ですが、下記リンクよりログイン情報の再確認をお願いいたします。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 情報システム部(受付時間 9:00〜18:00、土日祝を除く)", "fromName": "アオイ・エナジー株式会社 情報システム部", "fromAddr": "it-support@account.aoi-energy.co-jp.net", "linkText": "aoi-energy.co.jp/login", "actualUrl": "account.aoi-energy.co-jp.net/login", "reasonPhrases": ["差出人の表示名は正規の担当部署のように見えますが、実際の送信元アドレスは正規ドメインと異なっています", "表示されているリンクの文言と、実際の遷移先が一致していない可能性があります"], "aiVerdictPhishing": true, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": "r/a6ac540cb721.html", "resourcePath": "r/a6ac540cb721.html", "resourceLabel": "aoi-energy.co.jp/login", "pdfDisplay": null}, {"row": 13, "id": "aoi-013", "label": "安全", "subject": "再生可能エネルギー政策 特集号配信のお知らせ", "body": "クラウド配信サービスです。\nアオイ・エナジー様がご登録されている業界レポートの特別号をお届けします。\n今号は再生可能エネルギー関連の政策動向を特集しております。", "fromName": "クラウド配信サービス", "fromAddr": "news@mail-cloud-svc.jp", "linkText": "特別号.pdf", "actualUrl": "aoi_013_report_renewable_policy.pdf", "reasonPhrases": ["送信元のドメインが、自社の正規ドメインとは異なる第三者配信用の形式になっています"], "aiVerdictPhishing": true, "aiWrong": true, "wlBlBasis": true, "pdfFile": "r/f1410647275f.pdf", "htmlFile": null, "resourcePath": "r/f1410647275f.pdf", "resourceLabel": "特別号.pdf", "pdfDisplay": "report_renewable_policy.pdf"}, {"row": 59, "id": "aoi-059", "label": "フィッシング", "subject": "関東エネルギー取引所 会員資格更新の緊急確認", "body": "アオイ・エナジー取引部ご担当者様\n関東エネルギー取引所の会員資格更新手続きが未完了となっております。\n本日中にご対応いただけない場合、取引資格が一時停止となります。\n下記リンクより至急お手続きください。\n\nご不明点がございましたらお気軽にお問い合わせください。\n\n関東エネルギー取引所 事務局\n受付時間:8:30〜17:00(土日祝を除く)\n発行元:関東エネルギー取引所\n東京都中央区日本橋一丁目1番1号", "fromName": "関東エネルギー取引所 事務局", "fromAddr": "member@secure-mail-verify.net", "linkText": "kanto-energy-exchange.co.jp.com/renew", "actualUrl": "secure-mail-verify.net/renew", "reasonPhrases": ["文面は通常の業務連絡と同様の丁寧な言い回しで書かれています", "送信元のドメイン表記に、大きな違和感は見られません"], "aiVerdictPhishing": false, "aiWrong": true, "wlBlBasis": false, "pdfFile": null, "htmlFile": "r/a3cf1a8de989.html", "resourcePath": "r/a3cf1a8de989.html", "resourceLabel": "kanto-energy-exchange.co.jp.com/renew", "pdfDisplay": null}, {"row": 2, "id": "aoi-002", "label": "安全", "subject": "【システム通知】パスワード有効期限のお知らせ", "body": "情報システム部です。\nお客様の社内システムアカウントのパスワード有効期限が近づいています。\n社内ポータルより所定の手順でパスワードを更新してください。本メールは自動送信されています。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 情報システム部(受付時間 9:00〜18:00、土日祝を除く)", "fromName": "アオイ・エナジー株式会社 情報システム部", "fromAddr": "it-support@aoi-energy.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインは自社の正規ドメインと一致しており、社内からの送信と判断できます"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 50, "id": "aoi-050", "label": "フィッシング", "subject": "新規オープン記念、特大ボーナス進呈", "body": "新規オープンのオンラインカジノです。\n今なら登録するだけで特大ボーナスを進呈中!\n今すぐ下記リンクからご参加ください。", "fromName": "(表示名なし)", "fromAddr": "promo@casino-bonus-win.net", "linkText": "casino-bonus-win.net/bonus", "actualUrl": "casino-bonus-win.net/casino_bonus.html", "reasonPhrases": ["受信者が心当たりのない、一方的な当選・勧誘の体裁になっています"], "aiVerdictPhishing": true, "aiWrong": false, "wlBlBasis": false, "pdfFile": null, "htmlFile": "r/d07fb464f575.html", "resourcePath": "r/d07fb464f575.html", "resourceLabel": "casino-bonus-win.net/bonus", "pdfDisplay": null}, {"row": 37, "id": "aoi-037", "label": "フィッシング", "subject": "勤怠・経費精算システム 権限確認のお願い", "body": "情報システム部です。\n勤怠・経費精算システムの権限設定見直しに伴い、全社員の方に再確認をお願いしております。\n下記リンクより本日中にログイン情報をご確認ください。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 情報システム部(受付時間 9:00〜18:00、土日祝を除く)", "fromName": "アオイ・エナジー株式会社 情報システム部", "fromAddr": "it-support@aoi-eneegy.co.jp", "linkText": "bit.ly/aoi-perm25", "actualUrl": "aoi-eneegy.co.jp/permission-check", "reasonPhrases": ["差出人の表示名は正規の担当部署のように見えますが、実際の送信元アドレスは正規ドメインと異なっています", "表示されているリンクの文言と、実際の遷移先が一致していない可能性があります"], "aiVerdictPhishing": true, "aiWrong": false, "wlBlBasis": false, "pdfFile": null, "htmlFile": "r/9d9f69580280.html", "resourcePath": "r/9d9f69580280.html", "resourceLabel": "bit.ly/aoi-perm25", "pdfDisplay": null}, {"row": 58, "id": "aoi-058", "label": "フィッシング", "subject": "センサー基板 交換部品 配送状況のご連絡", "body": "ご注文いただいたセンサー基板の交換部品について、配送先情報に不備がございました。\n下記リンクより至急配送先の再確認をお願いいたします。", "fromName": "配送センター", "fromAddr": "notice@parcel-notify-jp.com", "linkText": "parcel-notify-jp.com/confirm", "actualUrl": "parcel-notify-jp.com/confirm", "reasonPhrases": ["送信元のドメインが、自社の正規ドメインや取引先のものとは一致していません"], "aiVerdictPhishing": true, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": "r/ecc56285bc65.html", "resourcePath": "r/ecc56285bc65.html", "resourceLabel": "parcel-notify-jp.com/confirm", "pdfDisplay": null}, {"row": 18, "id": "aoi-018", "label": "安全", "subject": "計測機器 配送日程のご案内", "body": "全国ロジスティクス株式会社です。\nご注文いただいた計測機器につきまして、配送日程が確定いたしましたのでご案内いたします。\nお届けは来週水曜日を予定しております。", "fromName": "全国ロジスティクス株式会社", "fromAddr": "support@zenkoku-logistics.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインは、登録済みの正規取引先のものと一致しています"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 29, "id": "aoi-029", "label": "安全", "subject": "発電設備保険 更新手続き完了のお知らせ", "body": "さくら損害保険です。\n発電設備向け損害保険の更新手続きが完了いたしましたのでお知らせいたします。\n新しい保険証券は追ってお送りいたします。", "fromName": "さくら損害保険株式会社", "fromAddr": "claims@sakura-sonpo.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインは、登録済みの正規取引先のものと一致しています"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 5, "id": "aoi-005", "label": "安全", "subject": "社内研修「エネルギー市場の最新動向」のご案内", "body": "総務部です。\n来月開催予定の社内研修「エネルギー市場の最新動向」について、参加希望者を募集しています。\nご興味のある方は社内ポータルよりお申し込みください。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 総務部(受付時間 9:00〜18:00、土日祝を除く)", "fromName": "アオイ・エナジー株式会社 総務部", "fromAddr": "m.ito@aoi-energy.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインは自社の正規ドメインと一致しており、社内からの送信と判断できます"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 32, "id": "aoi-032", "label": "フィッシング", "subject": "【重要】取引システムパスワード期限切れのお知らせ", "body": "アオイ・エナジー電力先物取引システムをご利用の皆様へ\n【重要】お客様のアカウントのパスワードが本日期限切れとなりました。\n下記リンクより至急パスワードを再設定してください。再設定が完了しない場合、発注機能がロックされます。\n\n※本日中にお手続きが確認できない場合、発注機能に制限がかかる場合がございますのでご注意ください。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 情報システム部(受付時間 9:00〜18:00、土日祝を除く)", "fromName": "アオイ・エナジー株式会社 情報システム部", "fromAddr": "it-support@aoi-energy-support.com", "linkText": "aoi-energy-support.com/password-reset", "actualUrl": "aoi-energy-support.com/password-reset", "reasonPhrases": ["文面は通常の業務連絡と同様の丁寧な言い回しで書かれています", "送信元のドメイン表記に、大きな違和感は見られません"], "aiVerdictPhishing": false, "aiWrong": true, "wlBlBasis": true, "pdfFile": null, "htmlFile": "r/c0c0be94f739.html", "resourcePath": "r/c0c0be94f739.html", "resourceLabel": "aoi-energy-support.com/password-reset", "pdfDisplay": null}, {"row": 7, "id": "aoi-007", "label": "安全", "subject": "来週の技術部会議について", "body": "技術開発部の皆さまへ\n来週火曜日14時より、定例の技術部会議を行います。\n今回は新型流量計の導入結果について報告予定です。会議室Bにて実施します。", "fromName": "アオイ・エナジー株式会社 技術開発部 山本", "fromAddr": "r.yamamoto@aoi-energy.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["文面に、至急の対応を促す表現がやや強く使われています"], "aiVerdictPhishing": true, "aiWrong": true, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 17, "id": "aoi-017", "label": "安全", "subject": "発電設備部品 配送完了のご連絡", "body": "全国ロジスティクス株式会社です。\nご注文いただいた発電設備部品につきまして、本日第2発電所宛てに配送が完了いたしましたのでご連絡いたします。\n納品書は別途郵送いたします。", "fromName": "全国ロジスティクス株式会社", "fromAddr": "support@zenkoku-logistics.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["配送状況の確認を促す文面が、よく見られるフィッシングの手口と類似しています"], "aiVerdictPhishing": true, "aiWrong": true, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 61, "id": "aoi-061", "label": "フィッシング", "subject": "【至急確認】取引明細に関するご連絡", "body": "アオイ・エナジー社のお取引口座について、不審な取引を検知いたしました。\n安全のため一時的に口座を制限しております。\n下記リンクより至急ご本人確認を行ってください。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 セキュリティ管理チーム(受付時間 9:00〜18:00、土日祝を除く)\n", "fromName": "アオイ・エナジー電力先物取引システム(セキュリティ管理チーム)", "fromAddr": "security@urgent-transaction-review.net", "linkText": "urgent-transaction-review.net/verify", "actualUrl": "urgent-transaction-review.net/verify", "reasonPhrases": ["文面は通常の業務連絡と同様の丁寧な言い回しで書かれています"], "aiVerdictPhishing": false, "aiWrong": true, "wlBlBasis": true, "pdfFile": null, "htmlFile": "r/9cefbbdaf61c.html", "resourcePath": "r/9cefbbdaf61c.html", "resourceLabel": "urgent-transaction-review.net/verify", "pdfDisplay": null}, {"row": 26, "id": "aoi-026", "label": "安全", "subject": "制御システム 保守部品在庫確認のご回答", "body": "中央計装工業です。\nお問い合わせいただいた制御システム保守部品の在庫について確認いたしました。\nご指定の部品はすべて在庫がございますので、通常納期でご手配可能です。", "fromName": "中央計装工業株式会社", "fromAddr": "support@chuo-keiso.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインは、登録済みの正規取引先のものと一致しています"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 8, "id": "aoi-008", "label": "安全", "subject": "関西プラントエンジニアリング様 定期点検日程の件", "body": "お世話になっております。\n来月予定しております第3パイプラインの定期点検について、貴社側の作業日程案をいただきましたのでご確認ください。\n候補日:来月第2週の火曜または水曜です。\nご不明点がございましたらお気軽にお問い合わせください。\n\nお問い合わせ窓口:関西プラントエンジニアリング株式会社 営業部(受付時間 9:00〜17:30、土日祝を除く)\n\n発行元:関西プラントエンジニアリング株式会社\n大阪府大阪市北区梅田三丁目1番1号\nhttps://www.kansai-plant-eng.co.jp", "fromName": "関西プラントエンジニアリング株式会社", "fromAddr": "info@kansai-plant-eng.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["送信元のドメインは、登録済みの正規取引先のものと一致しています"], "aiVerdictPhishing": false, "aiWrong": false, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}, {"row": 6, "id": "aoi-006", "label": "安全", "subject": "安全管理委員会 議事録のご確認", "body": "総務部です。\n先週開催した安全管理委員会の議事録を社内ポータルに載せました。\n現場作業に関わる方は必ずご確認をお願いいたします。\n\n─────────────────────\nお問い合わせ窓口:アオイ・エナジー株式会社 総務部(受付時間 9:00〜18:00、土日祝を除く)", "fromName": "アオイ・エナジー株式会社 総務部", "fromAddr": "m.ito@aoi-energy.co.jp", "linkText": null, "actualUrl": null, "reasonPhrases": ["文面に、至急の対応を促す表現がやや強く使われています"], "aiVerdictPhishing": true, "aiWrong": true, "wlBlBasis": true, "pdfFile": null, "htmlFile": null, "resourcePath": null, "resourceLabel": null, "pdfDisplay": null}];
+var CONFIG = {
+  company: 'aoi', companyName: 'アオイ・エナジー', setId: 'set3', mode: 'dynamic',
+  buildId: 'de151fa2dd', opsDevMode: false, collectUrl: '', opsPass: 'Qrun64SI'
+};
+var WHITELIST = [{"domain": "aoi-energy.co.jp", "category": "自社正規ドメイン", "note": "アオイ・エナジーの正規ドメイン"}, {"domain": "kansai-plant-eng.co.jp", "category": "正規取引先", "note": "関西プラントエンジニアリング株式会社、発電設備メンテナンスを担う正規パートナー企業"}, {"domain": "mail-cloud-svc.jp", "category": "正規取引先", "note": "アオイ・エナジーの業界ニュースレター配信を代行するクラウド配信サービスの正規ドメイン"}, {"domain": "nk-power-trading.co.jp", "category": "正規取引先", "note": "北関東パワートレーディング株式会社、電力先物取引の相手方企業"}, {"domain": "zenkoku-logistics.co.jp", "category": "正規取引先", "note": "機材配送を担う全国ロジスティクス"}, {"domain": "kanto-energy-exchange.co.jp", "category": "正規取引先", "note": "電力先物取引の取引所である関東エネルギー取引所"}, {"domain": "tokyo-lng-trading.co.jp", "category": "正規取引先", "note": "東京LNGトレーディング株式会社、LNG契約企業"}, {"domain": "chuo-keiso.co.jp", "category": "正規取引先", "note": "中央計装工業株式会社、制御部品契約企業"}, {"domain": "sakura-sonpo.co.jp", "category": "正規取引先", "note": "さくら損害保険株式会社、損害保険契約企業"}, {"domain": "tozai-audit.co.jp", "category": "正規取引先", "note": "東西監査法人、会計監査契約企業(サンプル・現行データセットのメールには未使用)"}, {"domain": "tokyo-daiichi-law.co.jp", "category": "正規取引先", "note": "東京第一法律事務所、契約法務顧問(サンプル・現行データセットのメールには未使用)"}, {"domain": "kanto-densetsu.co.jp", "category": "正規取引先", "note": "関東電設工業株式会社、電気設備工事の協力会社(サンプル・現行データセットのメールには未使用)"}, {"domain": "green-eco-consulting.co.jp", "category": "正規取引先", "note": "グリーン環境コンサルティング株式会社、CO2排出量算定支援(サンプル・現行データセットのメールには未使用)"}, {"domain": "jp-keiki-kensa.or.jp", "category": "正規取引先", "note": "日本計器検査協会、計測機器の校正・検査機関(サンプル・現行データセットのメールには未使用)"}, {"domain": "himawari-office-svc.co.jp", "category": "正規取引先", "note": "ひまわりオフィスサービス株式会社、事務用品調達先(サンプル・現行データセットのメールには未使用)"}, {"domain": "tokyo-print.co.jp", "category": "正規取引先", "note": "東京印刷株式会社、社内資料印刷委託先(サンプル・現行データセットのメールには未使用)"}, {"domain": "zennihon-honyaku.co.jp", "category": "正規取引先", "note": "全日本翻訳センター、海外契約書の翻訳委託先(サンプル・現行データセットのメールには未使用)"}, {"domain": "kanto-build-kanri.co.jp", "category": "正規取引先", "note": "関東ビル管理株式会社、オフィスビル管理・清掃委託先(サンプル・現行データセットのメールには未使用)"}, {"domain": "daiichi-logistics.co.jp", "category": "正規取引先", "note": "第一物流サービス株式会社、機材配送の協力会社(サンプル・現行データセットのメールには未使用)"}, {"domain": "chubu-energy-lab.co.jp", "category": "正規取引先", "note": "中部エネルギー研究所、共同研究パートナー(サンプル・現行データセットのメールには未使用)"}];
+var BLACKLIST = [{"domain": "aoi-energy-support.com", "category": "なりすまし(自社模倣)", "note": "アオイ・エナジー正規ドメイン(aoi-energy.co.jp)を模した類似ドメイン。社内からの通知を装う"}, {"domain": "account.aoi-energy.co-jp.net", "category": "なりすまし(自社模倣)", "note": "正規ドメインを模したサブドメイン偽装(aoi-energy.co-jp.netの前にaccount.を付与)"}, {"domain": "invoice-payment-notice.com", "category": "業務詐欺・なりすまし通知", "note": "取引先(北関東パワートレーディング等)を装った振込先変更・請求書詐欺"}, {"domain": "billing-update-portal.com", "category": "業務詐欺・なりすまし通知", "note": "取引先(関西プラントエンジニアリング等)を装った請求書確認・支払い情報更新要求"}, {"domain": "urgent-transaction-review.net", "category": "業務詐欺・なりすまし通知", "note": "取引契約・証拠金不足を装う緊急確認要求"}, {"domain": "delivery-zenkoku-logistics.com", "category": "配送なりすまし", "note": "配送業者(全国ロジスティクス等)を装い配送遅延の確認を求める通知"}, {"domain": "parcel-notify-jp.com", "category": "配送なりすまし", "note": "配送業者を装い部品配送状況の確認を求める通知"}, {"domain": "account-alert-service.com", "category": "業務詐欺・なりすまし通知", "note": "社内アカウント・取引に関する不正アクセス調査/是正命令を装うアラート通知"}, {"domain": "aoi-energy-portal.net", "category": "なりすまし(自社模倣)", "note": "アオイ・エナジー正規ドメインを模した類似ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "aoi-eneegy-inc.com", "category": "なりすまし(自社模倣)", "note": "アオイ・エナジー正規ドメインを模した類似ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "aoi-energy-mail.net", "category": "なりすまし(自社模倣)", "note": "アオイ・エナジー正規ドメインを模した類似ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "kansai-plant-eng-support.com", "category": "業務詐欺・なりすまし通知", "note": "関西プラントエンジニアリングを装った類似ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "nk-power-billing.net", "category": "業務詐欺・なりすまし通知", "note": "北関東パワートレーディングを装った請求偽装ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "kanto-exchange-alert.com", "category": "業務詐欺・なりすまし通知", "note": "関東エネルギー取引所を装った警告偽装ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "tokyo-lng-invoice.net", "category": "業務詐欺・なりすまし通知", "note": "東京LNGトレーディングを装った請求偽装ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "secure-parcel-check.net", "category": "配送なりすまし", "note": "配送業者を装った確認要求ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "urgent-account-verify.com", "category": "業務詐欺・なりすまし通知", "note": "アカウント確認を装う緊急通知型ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "career-opportunities-now.net", "category": "懸賞・当選詐欺", "note": "業界レポートを装った勧誘・懸賞型ドメイン(サンプル・現行データセットのメールには未使用)"}, {"domain": "plant-safety-notice.net", "category": "添付ファイル型(マルウェア誘導想定)", "note": "設備点検報告書送付を装う添付ファイル型ドメイン(サンプル・現行データセットのメールには未使用)"}];
+// 社内部門一覧(マスターデータセットの「〇〇部門」シートそのまま)。
+var DEPARTMENTS = ["情報システム部", "総務部", "技術開発部", "取引部", "発電設備監視センター", "経理部"];
+
+/* 送信元アドレスのドメインが、実際にホワイトリスト/ブラックリストに登録されているかを判定する。
+   WHITELIST/BLACKLISTそのもの(タブに表示している一覧)を直接参照するため、AIの誤判定(aiWrong)
+   の影響を受けず、常に事実(正解)として表示できる。 */
+function lookupListStatus(addr){
+  var domain = String(addr || '').split('@')[1];
+  if (!domain) return null;
+  domain = domain.toLowerCase();
+  var inWl = WHITELIST.some(function(w){ return (w.domain||'').toLowerCase() === domain; });
+  if (inWl) return 'wl';
+  var inBl = BLACKLIST.some(function(b){ return (b.domain||'').toLowerCase() === domain; });
+  if (inBl) return 'bl';
+  return null;
+}
+
+/* ---------------- state ----------------
+   参加者(実験者)には一切見せない項目: mode, 各種兆候カウンタ, 行動ログ全般,
+   正答数, 回答時間, WL/BL参照回数, AIとの一致率, リンク開封有無。
+   これらは state.answers / state.emailStats に記録するのみで、
+   画面には絶対に描画しない。
+------------------------------------------ */
+/* 動的表示は、機械学習的な「学習」は行わず、単純なif-thenルールのみで行動ログに基づき
+   切り替える。各ルールの内容自体は固定で、表示の優先度(複数の条件が同時に成立した場合に
+   どれを優先するか)のみを上から順に以下のようにしている。
+   ①AI判定への過度依存の兆候②(解答時間2秒以下の連続・fastStreak)>=2 → checklist(全項目
+     チェックで回答ロック解除)
+   ②フィッシングメールのURLを一度開いたら、以降URL付きメールで開く前の確認を促す(常時・
+     別枠。他の優先度には影響しない)
+   ③AI判定への過度依存の兆候①(AI誤判定への追従・wrongTrustCount)>=2 → quiz(自由記述)
+   ④不正解の連続(wrongStreak)>=2 → AIの判定・quiz・checklistを一切表示しない
+   いずれも、正解(本当の正誤と一致)した時点でそれぞれの回数を0にリセットする。
+   上記のいずれの兆候も見られない場合(normal)は、ランダムに選んだメールだけAIの説明の
+   根拠(最初の一文)を強調表示する(慣れ対策)。 */
+var state = {
+  mode: CONFIG.mode,           // static | dynamic ― 参加者には非表示(ビルド時に固定)
+  activeTab: 'inbox',           // inbox | whitelist | blacklist ― 表示中のタブ(参加者にも見える見た目上の状態)
+  selected: null,               // row id
+  answers: {},                   // row -> {answer, matchedAI, dwellMs, decidedAt, scrollEvents, maxScrollSpeed, linkOpened}
+  emailStats: {},                 // row -> {wlViews, blViews, resourceOpened, resourceOpenCount, resourceOpenedAt}
+  trialCount: 0,                    // number of emails opened so far(ログ用)
+  quizDrafts: {},                      // row -> {text, submittedAt} 自由記述クイズの回答(最終回答の前に記録する)
+  checklistDrafts: {},                  // row -> {checked:[bool,...], items:[string,...], completed, completedAt} チェックリストの回答状況
+  wrongTrustCount: 0,                   // 兆候①: AIが誤判定しているにもかかわらずAIの判定と同じ回答をした回数(累積)。正解で0にリセット
+  fastStreak: 0,                        // 兆候②: 解答時間が2秒以下だった回数(連続)。正解または非fast回答で0にリセット
+  wrongStreak: 0,                       // 不正解の兆候: 不正解の回数(連続)。正解で0にリセット
+  phishingUrlOpened: false,             // フィッシングメールのURL(html誘導)を開封した時点でtrue。そのメールを正しく判定できたらリセットする
+  phishingUrlOpenedRow: null,           // phishingUrlOpenedの引き金になったメールのrow(リセット判定に使う)
+  participantId: "",
+  seq: 0,
+  startedAt: null,
+  normalHighlightChoice: {},            // row -> bool。兆候なし(normal)のメールを、根拠強調表示にするかどうかの抽選結果(1メール1回だけ抽選)
+};
+
+function ensureEmailStat(row){
+  if (!state.emailStats[row]) state.emailStats[row] = { wlViews: 0, blViews: 0, resourceOpened: false, resourceOpenCount: 0, resourceOpenedAt: null, urlCheckCount: 0 };
+  return state.emailStats[row];
+}
+
+/* ---------------- free-text quiz(兆候①) ----------------
+   クイズ(自由記述)は「安全/フィッシングと考えた理由」を自由文で書かせる、記述必須の確認ステップ。
+   記述内容の正誤は判定せず(キーワード評価・ヒント表示は行わない)、何か記述して送信すれば
+   最終回答(安全/フィッシング)に進める。過度依存の兆候①の回数は、記述内容ではなく、
+   最終回答が本当の正誤と合っていたかどうかでリセットする。 */
+var QUIZ_PLACEHOLDER = '例）送信元アドレスがブラックリストに載っていた。表示されているURLと遷移先のURLが異なる。など';
+
+/* ---------------- checklist(兆候②) ----------------
+   AIの判定内容とは独立した、固定の確認項目を提示する。添付ファイル/リンクがあるメールのみ、
+   3つ目の項目(右クリックでの遷移先確認)を加える。全項目にチェックが入るまで、
+   最終回答(安全/フィッシング)ボタンは押せない。 */
+function buildChecklist(e){
+  var items = [
+    '送信元アドレスがホワイトリスト/ブラックリストに載っているか調べましたか？',
+    'メールの内容は緊急性を煽るような文章ではありませんか？'
+  ];
+  if (e.resourcePath){
+    items.push('添付ファイルの実際の遷移先を右クリックで確認しましたか？');
+  }
+  return items;
+}
+
+/* ---------------- helpers ---------------- */
+function $(sel, root){ return (root||document).querySelector(sel); }
+function $all(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+function esc(s){ return (s||'').replace(/[&<>]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+
+// PDF添付の表示用アイコン(ファイル名のテキストは出さず、この画像だけを見せる)。
+var PDF_ICON_SVG = '<svg width="46" height="58" viewBox="0 0 46 58" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+  '<path d="M3 2h26l14 14v38a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#eef0f3" stroke="#c7cdd6" stroke-width="1.5"/>' +
+  '<path d="M29 2v12a2 2 0 0 0 2 2h12" fill="none" stroke="#c7cdd6" stroke-width="1.5"/>' +
+  '<rect x="2" y="33" width="38" height="15" rx="2.5" fill="#e5484d"/>' +
+  '<text x="21" y="43.5" font-family="Arial, Helvetica, sans-serif" font-size="9.5" font-weight="700" fill="#fff" text-anchor="middle">PDF</text>' +
+  '</svg>';
+
+function emailById(row){
+  for (var i=0;i<EMAILS.length;i++){ if (EMAILS[i].row === row) return EMAILS[i]; }
+  return null;
+}
+
+/* ---------------- tabs ----------------
+   受信箱を開いたまま(= 選択中メールをdetail-colに表示したまま)、
+   ホワイトリスト/ブラックリストのタブを押すと、左カラムだけが
+   該当リストに切り替わる(右のメール本文・AI判定は表示されたまま)。
+   ホワイトリストとブラックリストが同時に表示されることはなく、
+   常に最後に押した一方だけが表示される。
+------------------------------------------ */
+$all('.tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    $all('.tab').forEach(function(t){ t.setAttribute('aria-selected','false'); });
+    tab.setAttribute('aria-selected','true');
+    var name = tab.getAttribute('data-tab');
+    state.activeTab = name;
+    // 参照回数は「選択中のメール1件あたり」で記録する(タブ全体の合計回数は参加者にも一切表示しない)
+    if (state.selected != null){
+      var st = ensureEmailStat(state.selected);
+      if (name === 'whitelist') st.wlViews++;
+      if (name === 'blacklist') st.blViews++;
+    }
+    renderListCol();
+    renderLog();
+  });
+});
+
+/* ---------------- counters (参加者に見せてよいのは回答進捗のみ) ---------------- */
+function renderCounters(){
+  var answered = Object.keys(state.answers).length;
+  $('#inboxCount').textContent = answered + '/' + EMAILS.length;
+  $('#progressText').textContent = answered + '/' + EMAILS.length;
+  $('#progressBar').style.width = Math.round(answered/EMAILS.length*100) + '%';
+}
+
+/* ---------------- whitelist / blacklist tables ---------------- */
+function renderStaticLists(){
+  var wlBody = $('#wlBody');
+  if (wlBody){
+    wlBody.innerHTML = WHITELIST.map(function(e){
+      return '<tr><td class="domain">'+esc(e.domain)+'</td>'+
+        '<td class="cat"><span class="cat-tag wl">'+esc(e.category||'')+'</span></td>'+
+        '<td class="note">'+esc((e.note||'').replace(/\(サンプル.*?\)/,'').trim())+'</td></tr>';
+    }).join('');
+  }
+  var blBody = $('#blBody');
+  if (blBody){
+    blBody.innerHTML = BLACKLIST.map(function(e){
+      return '<tr><td class="domain">'+esc(e.domain)+'</td>'+
+        '<td class="cat"><span class="cat-tag bl">'+esc(e.category||'')+'</span></td>'+
+        '<td class="note">'+esc((e.note||'').replace(/\(サンプル.*?\)/,'').trim())+'</td></tr>';
+    }).join('');
+  }
+  var deptBody = $('#deptBody');
+  if (deptBody){
+    deptBody.innerHTML = DEPARTMENTS.map(function(name){
+      return '<tr><td class="domain">'+esc(name)+'</td></tr>';
+    }).join('');
+  }
+}
+
+/* ---------------- 左カラム(受信箱 / ホワイトリスト / ブラックリスト)切替 ----------------
+   右側の detail-col (選択中メール本文・AI判定) には一切手を触れないので、
+   受信箱を開いたままリストを参照できる。
+------------------------------------------------------------------------- */
+function renderListCol(){
+  var col = $('#listCol');
+  col.classList.toggle('wide', state.activeTab !== 'inbox');
+  if (state.activeTab === 'whitelist'){
+    col.innerHTML =
+      '<div class="list-head"><h2>ホワイトリスト</h2><span>正規ドメイン・正規取引先ドメイン一覧</span></div>' +
+      '<div class="table-wrap"><table><thead><tr><th style="width:34%">ドメイン</th><th style="width:22%">分類</th><th>備考</th></tr></thead><tbody id="wlBody"></tbody></table></div>';
+  } else if (state.activeTab === 'blacklist'){
+    col.innerHTML =
+      '<div class="list-head"><h2>ブラックリスト</h2><span>既知の不審ドメイン一覧</span></div>' +
+      '<div class="table-wrap"><table><thead><tr><th style="width:34%">ドメイン</th><th style="width:22%">分類</th><th>備考</th></tr></thead><tbody id="blBody"></tbody></table></div>';
+  } else if (state.activeTab === 'dept'){
+    col.innerHTML =
+      '<div class="list-head"><h2>部門</h2><span>'+CONFIG.companyName+'株式会社 社内部門一覧</span></div>' +
+      '<div class="table-wrap"><table><thead><tr><th>部署名</th></tr></thead><tbody id="deptBody"></tbody></table></div>';
+  } else {
+    col.innerHTML =
+      '<div class="list-head"><h2>報告メール一覧</h2><span id="listSub">従業員からの報告分</span></div>' +
+      '<ul class="list" id="mailList"></ul>';
+  }
+  renderStaticLists();
+  renderList();
+}
+
+/* ---------------- mail list ---------------- */
+function renderList(){
+  var list = $('#mailList');
+  if (!list) return;
+  list.innerHTML = '';
+  EMAILS.forEach(function(e){
+    var li = document.createElement('li');
+    li.className = 'item' + (state.selected===e.row ? ' selected':'');
+    var ans = state.answers[e.row];
+    var pillHtml = ans
+      ? '<span class="pill '+(ans.answer==='phish'?'answered-phish':'answered-safe')+'">'+(ans.answer==='phish'?'フィッシングと回答':'安全と回答')+'</span>'
+      : '<span class="pill unanswered">未回答</span>';
+    li.innerHTML =
+      '<div class="item-top"><span class="item-dot" style="opacity:'+(ans?0:1)+'"></span><span class="item-from">'+esc(e.fromName.replace(/―.*/,'差出人不明'))+'</span></div>'+
+      '<div class="item-subject">'+esc(e.subject)+'</div>'+
+      '<div class="item-meta">'+pillHtml+'</div>';
+    li.addEventListener('click', function(){ selectEmail(e.row); });
+    list.appendChild(li);
+  });
+}
+
+/* ---------------- detail / AI card ---------------- */
+var scrollState = null; // {lastY, lastT, events:[], maxSpeed:0}
+
+function selectEmail(row){
+  state.selected = row;
+  state.trialCount++;
+  renderList();
+  renderDetail(row, false);
+  renderLog();
+}
+
+function startDwellTimer(){
+  return { start: performance.now(), openedTrial: state.trialCount };
+}
+
+function renderDetail(row, keepScroll){
+  var e = emailById(row);
+  var col = $('#detailCol');
+  if (!e){ col.innerHTML = '<div class="empty-state">左の一覧からメールを選択してください</div>'; return; }
+
+  var ans = state.answers[row];
+  // 一度「安全/フィッシング」を回答した後は、AIの説明・根拠(提示パターン)を変化させない。
+  // 回答時に実際に表示されていたパターンを ans.presentedPattern に固定保存し、以後はそれを
+  // 使い続ける(直近のカウンタの状態には影響されない)。
+  var pattern;
+  if (ans && ans.presentedPattern){
+    // 一度「安全/フィッシング」を回答した後は、その時点で見せていたパターンのまま固定する。
+    // 以後、カウンタの増減や他メールでの操作があっても、この表示は変化させない。
+    pattern = ans.presentedPattern;
+  } else {
+    // 優先度(上から順): ①AI判定への過度依存の兆候②(checklist) > ②フィッシングURL開封後の
+    // 注意喚起(別枠・常時表示。他のパターンの選択には影響しない) > ③AI判定への過度依存の兆候①
+    // (quiz) > ④不正解の兆候(hidden)。static(静的)モードではこれらの適応を行わない。
+    if (state.mode !== 'dynamic'){
+      pattern = 'static';
+    } else if (state.fastStreak >= 2){
+      pattern = 'checklist';
+    } else if (state.wrongTrustCount >= 2){
+      pattern = 'quiz';
+    } else if (state.wrongStreak >= 2){
+      pattern = 'hidden';
+    } else {
+      // 兆候が一つも見られない場合は、ランダムに選んだメールだけ根拠(AIの説明の最初の文)を
+      // 強調表示する(慣れ対策)。どのメールを強調するかは、このメールを最初に(未回答のまま)
+      // 開いた時点で1回だけ抽選し、以後は再抽選しない(presentedPatternとして固定もされる)。
+      if (state.normalHighlightChoice[row] === undefined){
+        state.normalHighlightChoice[row] = Math.random() < 0.5;
+      }
+      pattern = state.normalHighlightChoice[row] ? 'normal-highlight' : 'normal';
+    }
+  }
+
+  var displayFromName = e.fromName.indexOf('―') === 0 ? '差出人不明' : e.fromName;
+
+  // 送信元アドレスのホワイトリスト/ブラックリスト登録状況。デフォルトでは非表示にし、
+  // Fromの表示名をクリックしてメールアドレスを展開したときに、アドレスと一緒に表示する。
+  // WHITELIST/BLACKLISTそのものを参照して判定しているため、常に事実通り(正解)を示す。
+  var listStatus = lookupListStatus(e.fromAddr);
+  var listStatusHtml = listStatus ?
+    '<span class="list-status-badge addr-reveal '+listStatus+'" id="listStatusBadge">'+(listStatus==='wl'?'ホワイトリストに記載':'ブラックリストに記載')+'</span>' : '';
+
+  col.innerHTML =
+    '<div class="mail-card">' +
+      '<div class="mail-head">' +
+        '<h1>'+esc(e.subject)+'</h1>' +
+        '<div class="mail-meta-row"><b>From</b> ' +
+          '<button class="from-name-btn" id="fromToggle" aria-expanded="false">'+esc(displayFromName)+'<span class="car">▸</span></button>' +
+          '<span class="addr addr-reveal" id="addrReveal">'+esc(e.fromAddr)+'</span>' +
+          listStatusHtml +
+        '</div>' +
+      '</div>' +
+      '<div class="mail-body-wrap" id="bodyWrap">' +
+        '<div class="mail-body" id="mailBodyText"></div>' +
+      '</div>' +
+      '<div class="ai-card" id="aiCard"></div>' +
+    '</div>';
+
+  $('#fromToggle').addEventListener('click', function(){
+    var expanded = this.getAttribute('aria-expanded') === 'true';
+    this.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    $all('.addr-reveal').forEach(function(el){ el.classList.toggle('show', !expanded); });
+  });
+
+  renderMailBody(e, pattern);
+
+  var chip = $('#resourceChip');
+  if (chip){
+    // 「PDFファイル」であるかどうかは、表示上のラベル(見かけの拡張子)ではなく、
+    // 実際に生成されたファイルが何か(e.pdfFile / e.htmlFile)で判定する。
+    // これにより、表示だけPDFを装った偽装HTML(見かけは「◯◯.pdf」でも実体はhtml)は
+    // 常にHTML側の挙動(ダブルクリックで開く/右クリックで実際の遷移先を表示)になる。
+    if (e.pdfFile){
+      // 本物のPDF添付: 偽装の余地がないため、シングルクリックでそのまま実ファイルが開く。
+      // 見た目は変えず、開封回数だけを静かに記録する。右クリックでも(チェックリストの項目に
+      // 合わせて)実際の遷移先を直接表示できるようにしておく。
+      chip.addEventListener('click', function(){
+        var st = ensureEmailStat(e.row);
+        st.resourceOpened = true;
+        st.resourceOpenCount = (st.resourceOpenCount || 0) + 1;
+        st.resourceOpenedAt = Math.round(performance.now());
+        renderLog();
+      });
+      chip.addEventListener('contextmenu', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        var real = e.pdfDisplay || e.actualUrl || '';
+        showRealUrlToast(real, ev.clientX, ev.clientY);
+        var st = ensureEmailStat(e.row);
+        st.urlCheckCount = (st.urlCheckCount || 0) + 1;
+        renderLog();
+      });
+    } else {
+      // URL/HTML誘導(見かけがPDF名のものを含む): シングルクリックでは何も起こらない。
+      // ダブルクリックで実際にhtmlページを開き、右クリックではその場に
+      // 実際の遷移先URL(表示文字列とは異なる場合がある)を直接表示する。
+      chip.addEventListener('click', function(ev){
+        ev.preventDefault();
+      });
+      chip.addEventListener('dblclick', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        var st = ensureEmailStat(e.row);
+        st.resourceOpened = true;
+        st.resourceOpenCount = (st.resourceOpenCount || 0) + 1;
+        st.resourceOpenedAt = Math.round(performance.now());
+        // フィッシングメール(本当の正解がフィッシング)のURLを実際に開いても、このメール自身には
+        // 即時に注意書きは出さない。以後、他のURL付きメールを開いたときに注意書きを表示し、
+        // そのメールを正しく判定できた時点でリセットする(recordAnswer側で判定)。
+        if (e.label === 'フィッシング'){
+          state.phishingUrlOpened = true;
+          state.phishingUrlOpenedRow = e.row;
+        }
+        renderLog();
+        window.open(e.resourcePath, '_blank', 'noopener');
+      });
+      chip.addEventListener('contextmenu', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        var real = e.actualUrl || e.htmlFile || e.resourcePath || '';
+        showRealUrlToast(real, ev.clientX, ev.clientY);
+        var st = ensureEmailStat(e.row);
+        st.urlCheckCount = (st.urlCheckCount || 0) + 1;
+        renderLog();
+      });
+    }
+  }
+
+  if (e.pdfFile){ ensureEmailStat(e.row).pdfShown = true; }
+  renderAiCard(e, pattern, ans);
+  attachScrollLogger();
+}
+
+function renderMailBody(e, pattern){
+  var el = $('#mailBodyText');
+  var text = e.body;
+  var lines = text.split('\n');
+
+  // URL/HTML誘導の資料リンクは、本文中で「下記URL」「こちら」等と言及している行の直後に
+  // 差し込む(本文の流れに合わせて表示する)。言及箇所が見つからない場合は末尾に表示する
+  // (フォールバック)。
+  // PDF添付は常に本文の最下部(お問い合わせ窓口・発行元情報よりも下)にのみ表示し、
+  // ファイル名のテキストではなく、添付ファイルを表す画像(PDFアイコン)そのものを見せる。
+  var isPdf = !!e.pdfFile;
+  var resourceHtml = '';
+  if (e.resourcePath){
+    if (isPdf){
+      resourceHtml = '<div class="resource-row">' +
+        '<div class="pdf-frame" id="resourceChip">' +
+        '<iframe class="pdf-embed" id="pdfEmbed" title="添付ファイル" src="'+esc(e.resourcePath)+'#toolbar=0&navpanes=0&view=FitH"></iframe>' +
+        '</div></div>';
+    } else {
+      var displayLabel = e.linkText || e.resourceLabel || e.actualUrl || e.htmlFile || '';
+      // フィッシングメールのURLを実際に開いた経験がある場合、そのメール自身には注意書きを
+      // 出さず、その後に開いた別のURL付きメールで初めて、URLを開く前に送信元アドレスや
+      // 遷移先を確認するよう促す注意書きを添える。
+      var urlCautionHtml = (state.mode === 'dynamic' && state.phishingUrlOpened && e.row !== state.phishingUrlOpenedRow) ?
+        '<div class="url-caution-note">URLを開く前に、送信元アドレスやこのリンクの実際の遷移先(右クリックで確認できます)を確認しましょう。</div>' : '';
+      resourceHtml = '<div class="resource-row">' +
+        urlCautionHtml +
+        '<a class="mail-link" id="resourceChip" href="'+esc(e.resourcePath)+'" target="_blank" rel="noopener">' +
+          '<span>'+esc(displayLabel)+'</span></a>' +
+        '</div>';
+    }
+  }
+
+  var resourceAfterIdx = -1;
+  if (resourceHtml && !isPdf){
+    var primaryRe = /下記|リンク|こちら/;
+    var fallbackRe = /下記|添付|こちら|リンク/;
+    for (var j=0;j<lines.length;j++){ if (primaryRe.test(lines[j])){ resourceAfterIdx = j; break; } }
+    if (resourceAfterIdx === -1){
+      for (var k=0;k<lines.length;k++){ if (fallbackRe.test(lines[k])){ resourceAfterIdx = k; break; } }
+    }
+  }
+
+  var htmlParts = [];
+  lines.forEach(function(l, idx){
+    htmlParts.push(esc(l));
+    if (idx === resourceAfterIdx){ htmlParts.push('{{RESOURCE_BLOCK}}'); }
+  });
+  var joined = htmlParts.join('\n');
+  if (resourceHtml){
+    // PDFは本文の言及箇所を探さず、常に最後尾(本文全体・署名欄より下)に追加する。
+    if (isPdf || resourceAfterIdx === -1){ joined += '\n{{RESOURCE_BLOCK}}'; }
+    joined = joined.split('\n{{RESOURCE_BLOCK}}').join(resourceHtml);
+    joined = joined.split('{{RESOURCE_BLOCK}}').join(resourceHtml);
+  }
+  el.innerHTML = joined;
+}
+
+/* 自然な文章として理由を組み立てる(静的モードは常に同じ書式・同じ位置)。
+   動的モードでは、文章構成・太字の有無・表示位置をパターンごとに変える。
+   「今回のメールは、いくつかの点から〜と判断しました」のような抽象的な導入文は使わず、
+   根拠の文をそのまま自然文として提示する。複数の根拠をつなぐ接続語も「また」の連発を避け、
+   メールごとに変化させる。 */
+function reasonParagraph(e, boldFirst){
+  var phrases = (e.reasonPhrases && e.reasonPhrases.length) ? e.reasonPhrases : ['文面・送信元の構造的特徴から判定しました。'];
+  var connectors = ['さらに、', '加えて、', 'そのうえ、', 'また、'];
+  var body = phrases.map(function(p, i){
+    var t = esc(String(p).replace(/。+$/, '')) + '。';
+    if (boldFirst && i === 0) t = '<b class="reason-emph">' + t + '</b>';
+    if (i === 0) return t;
+    var conn = connectors[(e.row + i) % connectors.length];
+    return conn + t;
+  }).join('');
+  return '<p class="reason-paragraph">' + body + '</p>';
+}
+
+function renderAiCard(e, pattern, ans){
+  var card = $('#aiCard');
+  var verdictClass = e.aiVerdictPhishing ? 'phish' : 'safe';
+  var verdictLabel = e.aiVerdictPhishing ? 'フィッシングの疑いあり' : '安全と判定';
+  var confidence = e.aiWrong ? (58 + (e.row % 7)) : (86 + (e.row % 10));
+  // 確信度バーの色は、確信度の数値の高低ではなく「安全と判定(緑)」「フィッシングの疑いあり(赤)」の
+  // 判定ラベルの色と必ず一致させる。
+  var confColor = verdictClass === 'safe' ? 'var(--safe)' : 'var(--danger)';
+
+  var quizDraft = state.quizDrafts[e.row];
+  var checklistDraft = state.checklistDrafts[e.row];
+  var aiHeadHtml = '';
+  var reasonsHtml;
+  if (pattern === 'hidden'){
+    // 不正解の兆候(不正解が2回以上連続): AIの判定・クイズ・チェックリストなど一切を表示せず、
+    // 安全/フィッシングの最終回答ボタンのみを提示する。
+    aiHeadHtml = '';
+    reasonsHtml = '';
+  } else if (pattern === 'quiz'){
+    // AI判定への過度依存の兆候①(AIが誤判定しているにもかかわらずAIの判定と同じ回答をした
+    // 回数が累積2回以上): 判定だけでなく、安全/フィッシングのどちらだと思うかを自由記述で
+    // 答えさせる。理由を送信するまでは最終回答(安全/フィッシング)ボタンは押せない。
+    aiHeadHtml = '<div class="ai-head"><div class="ai-title">AIによる一次判定</div>' +
+      '<span class="verdict-pill '+verdictClass+'">'+ (e.aiVerdictPhishing?'⚠':'✓') +' '+verdictLabel+'</span>' +
+      '</div>';
+    var textVal = quizDraft ? esc(quizDraft.text) : '';
+    reasonsHtml =
+      '<div class="quiz-box">' +
+        '<p>安全だと考えた理由、またはフィッシングだと考えた理由を教えてください。</p>' +
+        '<textarea class="quiz-textarea" id="quizTextarea" placeholder="'+esc(QUIZ_PLACEHOLDER)+'"' + (quizDraft ? ' disabled' : '') + '>' + textVal + '</textarea>' +
+        (quizDraft ? '' : '<div class="quiz-actions"><button class="quiz-submit-btn" id="quizSubmitBtn" type="button" disabled>回答する</button></div>') +
+      '</div>';
+  } else if (pattern === 'checklist'){
+    // AI判定への過度依存の兆候②(解答時間が2秒以下だった回数が2回以上連続): チェックリストを
+    // 表示し、全項目にチェックが入るまで最終回答(安全/フィッシング)ボタンは押せない。
+    aiHeadHtml = '<div class="ai-head"><div class="ai-title">AIによる一次判定</div>' +
+      '<span class="verdict-pill '+verdictClass+'">'+ (e.aiVerdictPhishing?'⚠':'✓') +' '+verdictLabel+'</span>' +
+      '</div>';
+    var items = checklistDraft ? checklistDraft.items : buildChecklist(e);
+    var checkedArr = checklistDraft ? checklistDraft.checked : items.map(function(){ return false; });
+    reasonsHtml =
+      '<div class="checklist-box">' +
+        '<p>次のうち、確認したことにチェックを入れてください。すべてチェックすると判定できます。</p>' +
+        '<div class="checklist-items">' +
+          items.map(function(label, i){
+            return '<label class="checklist-item'+(checkedArr[i]?' checked':'')+'">' +
+              '<input type="checkbox" data-idx="'+i+'"'+(checkedArr[i]?' checked':'')+'>' +
+              '<span>'+esc(label)+'</span>' +
+            '</label>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  } else {
+    // static(静的)/normal(動的・通常表示): 常に同じ書式・同じ位置(判定バッジのすぐ下)の自然文。
+    // normal-highlight(動的・兆候なし時にランダムに選ばれたメール): 同じ位置だが、
+    // 根拠の最初の一文だけを強調表示する(慣れ対策)。
+    aiHeadHtml = '<div class="ai-head"><div class="ai-title">AIによる一次判定</div>' +
+      '<span class="verdict-pill '+verdictClass+'">'+ (e.aiVerdictPhishing?'⚠':'✓') +' '+verdictLabel+'</span>' +
+      '</div>';
+    reasonsHtml = reasonParagraph(e, pattern === 'normal-highlight');
+  }
+
+  // クイズ(自由記述)パターンでは、理由を送信するまで最終回答(安全/フィッシング)ボタンを
+  // 押せないようにする。チェックリストパターンは、全項目にチェックが入るまで最終回答ボタンを
+  // 押せないようにする。
+  var interventionLocked = (pattern === 'quiz' && !quizDraft) ||
+    (pattern === 'checklist' && !(checklistDraft && checklistDraft.completed));
+  var lockNote = pattern === 'quiz' ?
+    '※ 上の理由を回答すると、安全/フィッシングを選べるようになります' :
+    '※ すべての項目にチェックを入れると、安全/フィッシングを選べるようになります';
+
+  card.innerHTML =
+    aiHeadHtml +
+    ((pattern === 'static' || pattern === 'normal' || pattern === 'normal-highlight') ?
+      '<div class="confidence-row"><span class="confidence">確信度 <span class="track"><i style="width:'+confidence+'%;background:'+confColor+'"></i></span> '+confidence+'%</span></div>'
+      : '') +
+    reasonsHtml +
+    '<div class="answer-row-wrap'+(interventionLocked?' locked':'')+'" id="answerRowWrap">' +
+      '<div class="answer-row">' +
+        '<button class="answer-btn safe" data-ans="safe">安全<small>Safe</small></button>' +
+        '<button class="answer-btn phish" data-ans="phish">フィッシング<small>Phishing</small></button>' +
+      '</div>' +
+      (interventionLocked ? '<div class="quiz-lock-note">'+lockNote+'</div>' : '') +
+    '</div>';
+
+  if (ans){
+    if (ans.answer){
+      $all('.answer-btn').forEach(function(b){
+        if (b.getAttribute('data-ans') === ans.answer) b.classList.add('chosen');
+      });
+    }
+  }
+
+  var dwellStart = performance.now();
+  $all('.answer-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      var dwellMs = Math.round(performance.now() - dwellStart);
+      recordAnswer(e.row, b.getAttribute('data-ans'), dwellMs, pattern);
+    });
+  });
+  var quizTextarea = $('#quizTextarea');
+  var quizSubmitBtn = $('#quizSubmitBtn');
+  if (quizTextarea && quizSubmitBtn){
+    quizTextarea.addEventListener('input', function(){
+      quizSubmitBtn.disabled = !quizTextarea.value.trim();
+    });
+    quizSubmitBtn.addEventListener('click', function(){
+      var txt = quizTextarea.value.trim();
+      if (!txt) return;
+      // 自由記述の内容が正しいかどうかの判定は行わない(キーワード一致等の採点はしない)。
+      // 記述はそのまま保存し、最終回答(安全/フィッシング)を選べるようにするだけ。
+      // 兆候①の累積カウントのリセットは、実際の正誤(recordAnswer)でのみ行う。
+      state.quizDrafts[e.row] = { text: txt, submittedAt: new Date().toISOString() };
+      renderDetail(e.row, true);
+      renderLog();
+    });
+  }
+  $all('.checklist-item input[type=checkbox]').forEach(function(cb){
+    cb.addEventListener('change', function(){
+      var idx = +cb.getAttribute('data-idx');
+      var draft = state.checklistDrafts[e.row];
+      if (!draft){
+        draft = { items: buildChecklist(e), checked: [], completed: false, completedAt: null };
+        draft.checked = draft.items.map(function(){ return false; });
+        state.checklistDrafts[e.row] = draft;
+      }
+      draft.checked[idx] = cb.checked;
+      var allChecked = draft.checked.length > 0 && draft.checked.every(function(v){ return v; });
+      if (allChecked && !draft.completed){
+        draft.completed = true;
+        draft.completedAt = new Date().toISOString();
+        // 全項目にチェックが入ると、安全/フィッシングの最終回答ボタンが押せるようになる
+        // (interventionLocked)。兆候②の累積カウントのリセットは、実際の正誤(recordAnswer)
+        // でのみ行う(チェックリストを全て確認したこと自体では兆候をリセットしない)。
+      }
+      renderDetail(e.row, true);
+      renderLog();
+    });
+  });
+}
+
+/* ---------------- interaction logging ----------------
+   「AIの判定に同意する/しない」の明示ボタンは廃止。
+   最終回答(安全/フィッシング)が、参加者に提示したAIの判定と一致していたかを
+   自動的に記録する(= AIとの一致率の算出に使う。参加者には見せない)。
+----------------------------------------------------------- */
+function recordAnswer(row, answer, dwellMs, presentedPattern){
+  var e = emailById(row);
+  var a = state.answers[row] || {};
+  var isFirstAnswer = !a.answer;
+  a.answer = answer;
+  // 表示パターンは「最初に回答したときに見えていたもの」に固定する。回答をやり直した場合でも
+  // ここで上書きしない(= 以後もAIの説明・根拠は変化しない)。
+  if (!a.presentedPattern){ a.presentedPattern = presentedPattern; }
+  a.matchedAI = e ? ((answer === 'phish') === e.aiVerdictPhishing) : null;
+  a.dwellMs = dwellMs;
+  a.decidedAt = new Date().toISOString();
+  a.scrollEvents = (scrollState && scrollState.events) ? scrollState.events.slice() : [];
+  a.maxScrollSpeed = scrollState ? Math.round(scrollState.maxSpeed) : 0;
+  var st = ensureEmailStat(row);
+  a.linkOpened = st.resourceOpened;
+  a.wlViewsForThisEmail = st.wlViews;
+  a.blViewsForThisEmail = st.blViews;
+  var qd = state.quizDrafts[row];
+  if (qd){
+    a.quizText = qd.text;
+  }
+  var cl = state.checklistDrafts[row];
+  if (cl){
+    a.checklistItems = cl.items;
+    a.checklistChecked = cl.checked;
+    a.checklistCompleted = cl.completed;
+  }
+  state.answers[row] = a;
+  collectAnswer(row, isFirstAnswer);
+
+  // 以下の検知は、初回の回答時のみ集計する(回答をやり直しても二重にカウントしない)。
+  if (isFirstAnswer){
+    var ownCorrect = e ? (answer === (e.label === 'フィッシング' ? 'phish' : 'safe')) : null;
+
+    // AI判定への過度依存の兆候①: AIが誤判定しているにもかかわらずAIの判定と同じ回答をした
+    // 回数を累積でカウントする。判定(自分の回答)が実際の正誤と合っていればリセットする。
+    var wrongTrustThisAnswer = !!(e && e.aiWrong && a.matchedAI === true);
+    if (ownCorrect){
+      state.wrongTrustCount = 0;
+    } else if (wrongTrustThisAnswer){
+      state.wrongTrustCount++;
+    }
+
+    // AI判定への過度依存の兆候②: 解答時間が2秒以下だった回数の連続カウント。
+    // 判定が実際の正誤と合っていればリセットする(2秒以下でも正解ならリセット)。
+    if (ownCorrect){
+      state.fastStreak = 0;
+    } else if (dwellMs <= 2000){
+      state.fastStreak++;
+    } else {
+      state.fastStreak = 0;
+    }
+
+    // 不正解の兆候: 不正解の連続カウント。正解したらリセットする。
+    if (ownCorrect){
+      state.wrongStreak = 0;
+    } else {
+      state.wrongStreak++;
+    }
+
+    // フィッシングURL開封後の注意喚起: 実際に注意書きが表示されていたメール(URL付きで、
+    // 注意喚起の引き金になったメール自身ではない)を正しく判定できたら、以後の表示をリセットする。
+    var cautionWasShownOnThisEmail = !!(e && e.resourcePath && !e.pdfFile &&
+      state.phishingUrlOpened && row !== state.phishingUrlOpenedRow);
+    if (cautionWasShownOnThisEmail && ownCorrect){
+      state.phishingUrlOpened = false;
+      state.phishingUrlOpenedRow = null;
+    }
+  }
+
+  renderList();
+  renderCounters();
+  renderDetail(row, true);
+  renderLog();
+  maybeShowDone();
+}
+
+/* ---------------- リンクの「実際の遷移先」表示 ----------------
+   URL/HTML誘導の添付(見かけがPDF名のものを含む)は、右クリックした時点で
+   その場に実際の遷移先(company_email_datasetの「実際のリンク先URL」列、
+   無ければ添付ファイル名)を直接表示する。コピーは行わず、専用の確認ボタンも置かない。
+------------------------------------------------------------------ */
+function showRealUrlToast(text, x, y){
+  var toast = document.createElement('div');
+  toast.className = 'copy-toast';
+  toast.textContent = '実際の遷移先: ' + text;
+  toast.style.left = Math.max(8, Math.min(x, window.innerWidth - 308)) + 'px';
+  toast.style.top = (y + 10) + 'px';
+  document.body.appendChild(toast);
+  setTimeout(function(){ if (toast.parentNode) toast.parentNode.removeChild(toast); }, 2500);
+}
+
+function attachScrollLogger(){
+  var wrap = $('#bodyWrap');
+  scrollState = { lastY: 0, lastT: performance.now(), events: [], maxSpeed: 0 };
+  wrap.addEventListener('scroll', function(){
+    var now = performance.now();
+    var dy = Math.abs(wrap.scrollTop - scrollState.lastY);
+    var dt = Math.max(1, now - scrollState.lastT);
+    var speed = dy / dt * 1000; // px/sec
+    scrollState.events.push({ t: Math.round(now), top: Math.round(wrap.scrollTop), speed: Math.round(speed) });
+    if (scrollState.events.length > 200) scrollState.events.shift();
+    scrollState.maxSpeed = Math.max(scrollState.maxSpeed, speed);
+    scrollState.lastY = wrap.scrollTop;
+    scrollState.lastT = now;
+    renderLog();
+  }, { passive:true });
+}
+
+/* ---------------- [研究者用] 非表示ログパネル ----------------
+   参加者向けUIにはボタン等の導線を一切置かない。
+   Ctrl+Alt+L でのみ開閉できる(レビュー・動作確認用)。
+   本番運用時はこのパネル自体を削除し、記録データはサーバー送信/エクスポートに置き換える想定。
+----------------------------------------------------------------- */
+$('#logClose').addEventListener('click', function(){ $('#logDrawer').classList.remove('open'); });
+var opsUnlocked = false;
+function toggleOps(){
+  var dr = $('#logDrawer');
+  if (!dr.classList.contains('open') && !opsUnlocked){
+    var pw = window.prompt('運用者パスコード');
+    if (pw === null || pw !== CONFIG.opsPass) return;
+    opsUnlocked = true;
+    if (CONFIG.opsDevMode) $('#devModeRow').style.display = 'flex';
+  }
+  dr.classList.toggle('open');
+  renderLog();
+}
+document.addEventListener('keydown', function(ev){
+  if (ev.ctrlKey && ev.altKey && (ev.key === 'l' || ev.key === 'L')){ toggleOps(); }
+});
+$all('#devModeStatic, #devModeDynamic').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    $all('#devModeStatic, #devModeDynamic').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.mode = btn.getAttribute('data-mode');
+    if (state.selected != null) renderDetail(state.selected, true);
+    renderLog();
+  });
+});
+
+function renderLog(){
+  var body = $('#logBody');
+  if (!$('#logDrawer').classList.contains('open')) return;
+  var e = state.selected != null ? emailById(state.selected) : null;
+  var sc = scrollState;
+  var stSel = state.selected != null ? ensureEmailStat(state.selected) : null;
+  var answeredCount = Object.keys(state.answers).length;
+  var matchedCount = Object.values(state.answers).filter(function(a){return a.matchedAI===true;}).length;
+  var correctCount = Object.keys(state.answers).filter(function(row){
+    var em = emailById(+row); var a = state.answers[row];
+    return em && a.answer === (em.label==='フィッシング'?'phish':'safe');
+  }).length;
+  var dwellAvg = answeredCount ? Math.round(Object.values(state.answers).reduce(function(s,a){return s+(a.dwellMs||0);},0)/answeredCount) : 0;
+
+  var nextPattern = state.mode !== 'dynamic' ? 'static' :
+    (state.fastStreak >= 2 ? 'checklist' :
+    (state.wrongTrustCount >= 2 ? 'quiz' :
+    (state.wrongStreak >= 2 ? 'hidden' : 'normal(抽選でnormal-highlightになる場合あり)')));
+
+  var html = '';
+  html += '<div class="log-section"><b>提示モード(参加者には非表示)</b>' +
+    '<div class="log-kv"><span>mode</span><span>'+state.mode+'</span></div>' +
+    '<div class="log-kv"><span>次に未回答メールを開いたときのパターン</span><span>'+nextPattern+'</span></div>' +
+    '<div class="log-kv"><span>wrongTrustCount(兆候①: AI誤判定に同じ回答・累積)</span><span>'+state.wrongTrustCount+(state.wrongTrustCount>=2?' (閾値到達)':'')+'</span></div>' +
+    '<div class="log-kv"><span>fastStreak(兆候②: 解答2秒以下・連続)</span><span>'+state.fastStreak+(state.fastStreak>=2?' (閾値到達)':'')+'</span></div>' +
+    '<div class="log-kv"><span>wrongStreak(不正解の兆候: 連続)</span><span>'+state.wrongStreak+(state.wrongStreak>=2?' (閾値到達)':'')+'</span></div>' +
+    '<div class="log-kv"><span>phishingUrlOpened(フィッシングURLを開封済み)</span><span>'+(state.phishingUrlOpened?('はい(row '+state.phishingUrlOpenedRow+')'):'いいえ')+'</span></div>' +
+    '</div>';
+
+  html += '<div class="log-section"><b>選択中メール</b>';
+  if (e && sc && stSel){
+    html += '<div class="log-kv"><span>件名</span><span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.subject)+'</span></div>';
+    html += '<div class="log-kv"><span>scroll events</span><span>'+sc.events.length+'</span></div>';
+    html += '<div class="log-kv"><span>max speed(px/s)</span><span>'+Math.round(sc.maxSpeed)+'</span></div>';
+    html += '<div class="log-kv"><span>このメールのWL参照回数</span><span>'+stSel.wlViews+'</span></div>';
+    html += '<div class="log-kv"><span>このメールのBL参照回数</span><span>'+stSel.blViews+'</span></div>';
+    html += '<div class="log-kv"><span>WL/BLが判断根拠か(wlBlBasis)</span><span>'+(e.wlBlBasis?'はい':'いいえ')+'</span></div>';
+    html += '<div class="log-kv"><span>添付/リンク開封</span><span>'+(stSel.resourceOpened ? 'あり(計'+(stSel.resourceOpenCount||0)+'回)' : (e.resourcePath ? 'なし' : '(対象外)'))+'</span></div>';
+    html += '<div class="log-kv"><span>URL確認ボタン使用回数</span><span>'+(stSel.urlCheckCount||0)+(e.actualUrl?'':'(対象外)')+'</span></div>';
+    var selAns = state.answers[e.row];
+    if (selAns && selAns.quizText != null){
+      html += '<div class="log-kv"><span>クイズ自由記述</span><span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(selAns.quizText)+'</span></div>';
+    }
+    if (selAns && selAns.checklistItems){
+      html += '<div class="log-kv"><span>チェックリスト項目</span><span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(selAns.checklistItems.join(' / '))+'</span></div>';
+      html += '<div class="log-kv"><span>チェックリスト完了</span><span>'+(selAns.checklistCompleted?'はい':'いいえ')+'</span></div>';
+    }
+  } else {
+    html += '<div class="log-kv"><span>—</span><span>メール未選択</span></div>';
+  }
+  html += '</div>';
+
+  html += '<div class="log-section"><b>全体サマリ(参加者には非表示)</b>' +
+    '<div class="log-kv"><span>回答数</span><span>'+answeredCount+' / '+EMAILS.length+'</span></div>' +
+    '<div class="log-kv"><span>正答数</span><span>'+correctCount+'</span></div>' +
+    '<div class="log-kv"><span>平均回答時間</span><span>'+dwellAvg+'ms</span></div>' +
+    '<div class="log-kv"><span>AIとの一致率</span><span>'+(answeredCount?Math.round(matchedCount/answeredCount*100):0)+'% ('+matchedCount+'/'+answeredCount+')</span></div>' +
+    '</div>';
+
+  html += '<div class="log-note">この行動ログ・提示モード・各種集計は参加者画面には一切表示されません。機械学習による適応学習は行わず、単純なif-thenルールのみで行動ログに基づく適応を実装しています。各ルールの内容自体は固定で、同じ条件が同時に成立した場合に何を優先して表示するかの優先順位のみを上から順に並べています。①AI判定への過度依存の兆候②: 解答時間が2秒以下だった回数が連続2回以上(fastStreak)になると、チェックリストを表示し(checklist)、全項目にチェックが入るまで最終回答ボタンは押せません。チェックリストの項目は「送信元アドレスがホワイトリスト/ブラックリストに載っているか調べましたか？」「メールの内容は緊急性を煽るような文章ではありませんか？」の2項目に加え、添付ファイル・URLがあるメールでは「添付ファイルの実際の遷移先を右クリックで確認しましたか？」を加えた固定の項目です。判定が実際の正誤と合っていればfastStreakを0にリセットします(2秒以下でも正解ならリセットされ、2秒を超えた場合も連続が途切れるのでリセットされます)。②フィッシングメールのURLを実際に開いたとき(phishingUrlOpened)、そのメール自身には即時には注意書きを表示しません。その後に開いた別のURL付きメールで初めて、URLを開く前に送信元アドレスやURLの遷移先アドレスを確認するよう促す注意書きを本文中のリンクの上に表示します。実際に注意書きが表示されたメールを正しく判定できた時点でリセットされ、以後(URL付きメールであっても)注意書きは表示されなくなります。他のパターンの選択には影響せず、どのパターンとも同時に表示されます。③AI判定への過度依存の兆候①: AIが誤判定しているにもかかわらずAIの判定と同じ回答をした回数(wrongTrustCount)が累積2回以上になると、安全/フィッシングのどちらだと思うかを自由記述させます(quiz。記述欄の既定文言は「例）送信元アドレスがブラックリストに載っていた。表示されているURLと遷移先のURLが異なる。など」で、記述内容の正誤は判定しません)。記述を送信するまで最終回答ボタンは押せません。判定が実際の正誤と合っていればwrongTrustCountを0にリセットします。④不正解の兆候: 不正解が連続2回以上(wrongStreak)になると、AIの判定・クイズ・チェックリストなど一切を表示せず、安全/フィッシングの回答ボタンのみを提示します(hidden)。正解すればwrongStreakを0にリセットします。どの兆候にも該当しない場合(normal)は、そのメールを最初に開いた時点で1回だけ抽選を行い、約50%の確率でAIの説明の最初の一文を強調表示します(normal-highlight。慣れ対策としてランダムに選ばれたメールのみ強調され、残りは静的モードと同じ書式になります)。一度回答したメールは、その時点で見せていた提示パターン(抽選結果を含む)・記入したクイズやチェックリストの内容のまま固定され、以後変化しません。このパネルは右下のボタンまたはCtrl+Alt+Lで開閉できる運用者用の確認機能です。</div>';
+
+  body.innerHTML = html;
+}
+
+/* ---------------- completion ----------------
+   参加者に見せてよいのは「回答が完了したこと」のみ。
+   正答数・回答時間・確認回数・一致率などは一切表示しない。
+------------------------------------------------ */
+function maybeShowDone(){
+  var answeredCount = Object.keys(state.answers).length;
+  if (answeredCount < EMAILS.length) return;
+  var col = $('#detailCol');
+  col.innerHTML =
+    '<div class="done-card">' +
+      '<h2>すべてのメールへの回答が完了しました</h2>' +
+      '<p style="color:var(--muted);font-size:13px;max-width:40ch;text-align:center;line-height:1.7;margin:0;">ご協力ありがとうございました。このページは閉じて構いません。</p>' +
+      '<div class="sync-note" id="syncNote"></div>' +
+    '</div>';
+  updateSyncNote();
+}
+
+/* ---------------- 本番用: 回答データの収集(送信キュー + CSV書き出し) ----------------
+   1回答 = 1行。送信先(CONFIG.collectUrl)が設定されていれば随時POSTし、失敗分は
+   localStorageのキューに残して再送する。送信先が空の場合や送信できなかった場合に備え、
+   完了画面からCSVを保存できる。mode(静的/動的)は研究者用の列として記録するだけで、
+   参加者の画面には一切表示しない。 */
+var CSV_COLS = ['timestamp','participantId','company','setId','mode','buildId','seq','emailId','trueLabel',
+  'aiVerdict','aiWrong','participantAnswer','correct','matchedAI','isFirstAnswer','quizText',
+  'wlViewed','blViewed','wlViewCount','blViewCount','dwellMs','presentedPattern',
+  'resourceType','resourceOpened','pdfShown','urlChecked','urlCheckCount','checklistCompleted','userAgent'];
+var memStore = {};
+function sGet(k){ try { return window.localStorage.getItem(k); } catch(_){ return memStore[k] || null; } }
+function sSet(k,v){ try { window.localStorage.setItem(k,v); } catch(_){ memStore[k] = v; } }
+function loadList(k){ try { return JSON.parse(sGet(k) || '[]'); } catch(_){ return []; } }
+function storeKey(suffix){ return 'pq_' + CONFIG.buildId + '_' + (state.participantId || 'anon') + '_' + suffix; }
+var sending = false;
+
+function yn(v){ return v ? 'はい' : 'いいえ'; }
+function collectAnswer(row, isFirst){
+  var e = emailById(row), a = state.answers[row], st = ensureEmailStat(row);
+  var hasRes = !!(e && e.resourcePath);
+  var truth = e.label === 'フィッシング' ? 'phish' : 'safe';
+  state.seq++;
+  var rec = {
+    timestamp: new Date().toISOString(), participantId: state.participantId, company: CONFIG.company, setId: CONFIG.setId,
+    mode: CONFIG.mode, buildId: CONFIG.buildId, seq: state.seq, emailId: e.id, trueLabel: e.label,
+    aiVerdict: e.aiVerdictPhishing ? 'フィッシング' : '安全', aiWrong: yn(e.aiWrong),
+    participantAnswer: a.answer === 'phish' ? 'フィッシング' : '安全', correct: yn(a.answer === truth),
+    matchedAI: yn(a.matchedAI), isFirstAnswer: yn(isFirst), quizText: a.quizText != null ? a.quizText : '',
+    wlViewed: yn(st.wlViews > 0), blViewed: yn(st.blViews > 0), wlViewCount: st.wlViews, blViewCount: st.blViews,
+    dwellMs: a.dwellMs, presentedPattern: a.presentedPattern,
+    resourceType: !hasRes ? '' : (e.pdfFile ? 'PDF' : 'URL/HTML'),
+    resourceOpened: hasRes ? yn(!!st.resourceOpened) : '',
+    pdfShown: e.pdfFile ? yn(!!st.pdfShown) : '',
+    urlChecked: hasRes ? yn((st.urlCheckCount || 0) > 0) : '', urlCheckCount: hasRes ? (st.urlCheckCount || 0) : '',
+    checklistCompleted: a.checklistItems ? yn(!!a.checklistCompleted) : '', userAgent: navigator.userAgent
+  };
+  var all = loadList(storeKey('all')); all.push(rec); sSet(storeKey('all'), JSON.stringify(all));
+  var pend = loadList(storeKey('pending')); pend.push(rec); sSet(storeKey('pending'), JSON.stringify(pend));
+  flushPending();
+}
+
+function flushPending(){
+  if (!CONFIG.collectUrl || sending) { updateSyncNote(); return; }
+  var pend = loadList(storeKey('pending'));
+  if (!pend.length) { updateSyncNote(); return; }
+  sending = true;
+  var n = pend.length;
+  fetch(CONFIG.collectUrl, { method: 'POST', mode: 'no-cors', keepalive: true,
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ records: pend }) })
+    .then(function(){
+      // no-corsのため応答本文は読めない。リクエストが送出できたものを送信済みとして扱う。
+      var cur = loadList(storeKey('pending')); sSet(storeKey('pending'), JSON.stringify(cur.slice(n)));
+    })
+    .catch(function(){})
+    .then(function(){ sending = false; updateSyncNote(); if (loadList(storeKey('pending')).length && navigator.onLine) setTimeout(flushPending, 5000); });
+}
+window.addEventListener('online', flushPending);
+
+function csvText(){
+  var rows = loadList(storeKey('all'));
+  function q(v){ v = (v == null ? '' : String(v)); return '"' + v.replace(/"/g, '""') + '"'; }
+  return '﻿' + [CSV_COLS.join(',')].concat(rows.map(function(r){ return CSV_COLS.map(function(c){ return q(r[c]); }).join(','); })).join('\r\n');
+}
+function downloadCsv(){
+  var blob = new Blob([csvText()], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'result_' + (state.participantId || 'anon') + '_' + CONFIG.buildId + '.csv';
+  document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); }, 0);
+}
+function updateSyncNote(){
+  var el = $('#syncNote'); if (!el) return;
+  var pend = loadList(storeKey('pending')).length;
+  if (CONFIG.collectUrl && !pend){ el.textContent = '回答データの送信が完了しました。'; return; }
+  el.innerHTML = (CONFIG.collectUrl ? '回答データの送信が完了していません。通信環境をご確認ください。' : '回答データはこの端末に保存されています。') +
+    '<br>下のボタンで結果ファイルを保存し、実験担当者にお送りください。<br><button class="dl-btn" id="dlCsv" type="button">結果ファイルを保存</button>' +
+    (CONFIG.collectUrl ? ' <button class="dl-btn" id="retrySend" type="button">再送信</button>' : '');
+  var b = $('#dlCsv'); if (b) b.addEventListener('click', downloadCsv);
+  var r = $('#retrySend'); if (r) r.addEventListener('click', flushPending);
+}
+$('#opsCsv').addEventListener('click', downloadCsv);
+
+/* ---------------- 導入画面 ---------------- */
+function initOnboarding(){
+  var pidInput = $('#obPid'), consent = $('#obConsent'), start = $('#obStart');
+  try { var q = new URLSearchParams(location.search).get('pid'); if (q) pidInput.value = q.slice(0, 40); } catch(_){}
+  function sync(){ start.disabled = !(pidInput.value.trim() && consent.checked); }
+  pidInput.addEventListener('input', sync); consent.addEventListener('change', sync); sync();
+  start.addEventListener('click', function(){
+    state.participantId = pidInput.value.trim();
+    state.startedAt = new Date().toISOString();
+    $('#obOverlay').style.display = 'none';
+    window.scrollTo(0, 0);
+    window.addEventListener('beforeunload', function(ev){
+      if (Object.keys(state.answers).length < EMAILS.length){ ev.preventDefault(); ev.returnValue = ''; }
+    });
+  });
+}
+
+/* ---------------- init ---------------- */
+renderListCol();
+renderCounters();
+$('#detailCol').innerHTML = '<div class="empty-state">左の一覧から報告メールを選択して、スクリーニングを開始してください。</div>';
+initOnboarding();
+
+})();
+</script>
+
+</html>
