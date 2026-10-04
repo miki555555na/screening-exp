@@ -23,6 +23,8 @@
 .ob-start:disabled{opacity:.4; cursor:not-allowed;}
 .pdf-frame{padding:8px; border:1px solid var(--border); border-radius:10px; background:var(--surface-2); margin-top:6px;}
 .pdf-embed{display:block; width:100%; height:520px; border:0; border-radius:6px; background:#fff;}
+.help-btn{margin-left:10px; padding:8px 14px; border:1px solid var(--border); border-radius:10px; background:var(--surface); font-size:13px; cursor:pointer; white-space:nowrap;}
+.help-btn:hover{background:var(--surface-2);}
 .sync-note{margin-top:16px; font-size:12px; color:var(--muted);}
 .dl-btn{margin-top:12px; padding:8px 16px; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; font-size:13px;}
 :root{
@@ -429,6 +431,7 @@ td.note{color:var(--ink-soft); font-size:12px; line-height:1.6;}
       <div class="bar"><i id="progressBar" style="width:0%"></i></div>
       <span id="progressText">0/30</span>
     </div>
+    <button class="help-btn" id="helpBtn" type="button">⚙ 設定</button>
   </div>
 
   <div class="stage">
@@ -473,6 +476,7 @@ td.note{color:var(--ink-soft); font-size:12px; line-height:1.6;}
       <li>判定は、画面下部の「安全」「フィッシング」のボタンで回答します。すべてのメールに回答すると終了です。</li>
     </ul>
 
+
     <h2>データの取り扱い</h2>
     <p>この演習では、回答内容や操作の記録(回答時間など)を、研究目的で収集します。個人が特定される形で公表することはありません。</p>
 
@@ -482,6 +486,37 @@ td.note{color:var(--ink-soft); font-size:12px; line-height:1.6;}
       <label class="ob-consent"><input type="checkbox" id="obConsent"> <span>上記の内容を理解し、データの収集に同意したうえで、演習を開始します。</span></label>
       <button class="ob-start" id="obStart" type="button" disabled>演習を開始する</button>
     </div>
+  </div>
+</div>
+
+<div class="ob-overlay" id="helpOverlay" style="display:none; z-index:90; background:rgba(20,24,35,.55);">
+  <div class="ob-card">
+    <h1>演習の説明</h1>
+    <p class="ob-sub">いつでも見返せます。閉じると演習に戻ります。</p>
+    <h2>あなたの役割</h2>
+    <p>あなたは「<b>アオイ・エナジー株式会社</b>」の<b>情報セキュリティ担当者(ヘルプデスク要員)</b>です。社内の従業員から「怪しいかもしれない」と報告されたメールを確認し、安全なメールかフィッシングメールを判定する立場にあります。</p>
+
+    <h2>タスク</h2>
+    <p>従業員から報告されたメール(全30件)について、AIの支援を受けながら、それぞれ<b>「安全」</b>か<b>「フィッシング」</b>かを判定してください。</p>
+    <div class="ob-note">
+      <ul>
+        <li>表示されるメールは、<b>あなた自身の受信箱に届いたものではありません</b>。他の利用者(従業員)が受け取り、報告してきたメールです。</li>
+        <li>メールの送信元と<b>個人的な面識があるかどうかは、判断に使わないでください</b>。文面・件名・送信元アドレス・リンクなど、メールの<b>構造的な特徴</b>に基づいて判定してください。</li>
+        <li>正解・不正解は、判定の途中では表示されません。</li>
+      </ul>
+    </div>
+
+    <h2>画面の使い方</h2>
+    <ul>
+      <li>左の「報告メール一覧」からメールを選ぶと、右側に本文とAIの判定が表示されます。</li>
+      <li>差出人の名前をクリックすると、送信元のメールアドレスが表示されます。</li>
+      <li>上部のタブ(<b>ホワイトリスト / ブラックリスト / 部門</b>)で、社内で管理している参考情報を確認できます。</li>
+      <li>メールにPDFが添付されている場合は、本文の下部に表示されます。リンクや添付ファイルを開きたいときは、ダブルクリックしてください(PDFはそのまま表示されます)。</li>
+      <li>判定は、画面下部の「安全」「フィッシング」のボタンで回答します。すべてのメールに回答すると終了です。</li>
+    </ul>
+
+
+    <div class="ob-form"><button class="ob-start" id="helpClose" type="button">閉じて演習に戻る</button></div>
   </div>
 </div>
 
@@ -1407,6 +1442,17 @@ function initOnboarding(){
     });
   });
 }
+
+/* ---------------- 演習中の説明の再表示(⚙ 設定) ---------------- */
+(function(){
+  var ov = $('#helpOverlay');
+  function openHelp(){ ov.style.display = 'flex'; ov.scrollTop = 0; }
+  function closeHelp(){ ov.style.display = 'none'; }
+  $('#helpBtn').addEventListener('click', openHelp);
+  $('#helpClose').addEventListener('click', closeHelp);
+  ov.addEventListener('click', function(ev){ if (ev.target === ov) closeHelp(); });
+  document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape') closeHelp(); });
+})();
 
 /* ---------------- init ---------------- */
 renderListCol();
