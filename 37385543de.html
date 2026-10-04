@@ -431,7 +431,7 @@ td.note{color:var(--ink-soft); font-size:12px; line-height:1.6;}
       <div class="bar"><i id="progressBar" style="width:0%"></i></div>
       <span id="progressText">0/30</span>
     </div>
-    <button class="help-btn" id="helpBtn" type="button">⚙ 設定</button>
+    <button class="help-btn" id="helpBtn" type="button">演習の進め方</button>
   </div>
 
   <div class="stage">
@@ -491,7 +491,7 @@ td.note{color:var(--ink-soft); font-size:12px; line-height:1.6;}
 
 <div class="ob-overlay" id="helpOverlay" style="display:none; z-index:90; background:rgba(20,24,35,.55);">
   <div class="ob-card">
-    <h1>演習の説明</h1>
+    <h1>演習の進め方</h1>
     <p class="ob-sub">いつでも見返せます。閉じると演習に戻ります。</p>
     <h2>あなたの役割</h2>
     <p>あなたは「<b>アオイ・エナジー株式会社</b>」の<b>情報セキュリティ担当者(ヘルプデスク要員)</b>です。社内の従業員から「怪しいかもしれない」と報告されたメールを確認し、安全なメールかフィッシングメールを判定する立場にあります。</p>
@@ -1072,9 +1072,10 @@ function renderAiCard(e, pattern, ans){
   }
 
   var dwellStart = performance.now();
+  var pausedAtRender = pausedTotalMs;
   $all('.answer-btn').forEach(function(b){
     b.addEventListener('click', function(){
-      var dwellMs = Math.round(performance.now() - dwellStart);
+      var dwellMs = Math.max(0, Math.round(performance.now() - dwellStart - (pausedTotalMs - pausedAtRender)));
       recordAnswer(e.row, b.getAttribute('data-ans'), dwellMs, pattern);
     });
   });
@@ -1345,6 +1346,7 @@ function maybeShowDone(){
   updateSyncNote();
 }
 
+var pausedTotalMs = 0;   // 「演習の進め方」を開いていた累計時間(ms)
 /* ---------------- 本番用: 回答データの収集(送信キュー + CSV書き出し) ----------------
    1回答 = 1行。送信先(CONFIG.collectUrl)が設定されていれば随時POSTし、失敗分は
    localStorageのキューに残して再送する。送信先が空の場合や送信できなかった場合に備え、
@@ -1446,8 +1448,10 @@ function initOnboarding(){
 /* ---------------- 演習中の説明の再表示(⚙ 設定) ---------------- */
 (function(){
   var ov = $('#helpOverlay');
-  function openHelp(){ ov.style.display = 'flex'; ov.scrollTop = 0; }
-  function closeHelp(){ ov.style.display = 'none'; }
+  // 説明を読んでいる間は回答時間(dwellMs)を止める: 開いていた時間を pausedTotalMs に積み、回答時に差し引く。
+  var pauseStart = null;
+  function openHelp(){ if (pauseStart === null) pauseStart = performance.now(); ov.style.display = 'flex'; ov.scrollTop = 0; }
+  function closeHelp(){ if (pauseStart !== null){ pausedTotalMs += performance.now() - pauseStart; pauseStart = null; } ov.style.display = 'none'; }
   $('#helpBtn').addEventListener('click', openHelp);
   $('#helpClose').addEventListener('click', closeHelp);
   ov.addEventListener('click', function(ev){ if (ev.target === ov) closeHelp(); });
