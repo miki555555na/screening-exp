@@ -1336,6 +1336,7 @@ function renderLog(){
 function maybeShowDone(){
   var answeredCount = Object.keys(state.answers).length;
   if (answeredCount < EMAILS.length) return;
+  if (!state.surveyDone){ showSurvey(); }
   var col = $('#detailCol');
   col.innerHTML =
     '<div class="done-card">' +
@@ -1410,23 +1411,25 @@ function csvText(){
   function q(v){ v = (v == null ? '' : String(v)); return '"' + v.replace(/"/g, '""') + '"'; }
   return '﻿' + [CSV_COLS.join(',')].concat(rows.map(function(r){ return CSV_COLS.map(function(c){ return q(r[c]); }).join(','); })).join('\r\n');
 }
-function downloadCsv(){
-  var blob = new Blob([csvText()], { type: 'text/csv;charset=utf-8' });
+function downloadCsv(kind){
+  var survey = kind === 'survey';
+  var blob = new Blob([survey ? surveyCsvText() : csvText()], { type: 'text/csv;charset=utf-8' });
   var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'result_' + (state.participantId || 'anon') + '_' + CONFIG.buildId + '.csv';
+  a.download = (survey ? 'survey_' : 'result_') + (state.participantId || 'anon') + '_' + CONFIG.buildId + '.csv';
   document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); }, 0);
 }
 function updateSyncNote(){
   var el = $('#syncNote'); if (!el) return;
-  var pend = loadList(storeKey('pending')).length;
+  var pend = loadList(storeKey('pending')).length + loadList(storeKey('spending')).length;
   if (CONFIG.collectUrl && !pend){ el.textContent = '回答データの送信が完了しました。'; return; }
   el.innerHTML = (CONFIG.collectUrl ? '回答データの送信が完了していません。通信環境をご確認ください。' : '回答データはこの端末に保存されています。') +
-    '<br>下のボタンで結果ファイルを保存し、実験担当者にお送りください。<br><button class="dl-btn" id="dlCsv" type="button">結果ファイルを保存</button>' +
+    '<br>下のボタンで結果ファイルを保存し、実験担当者にお送りください。<br><button class="dl-btn" id="dlCsv" type="button">結果ファイルを保存</button> <button class="dl-btn" id="dlSurvey" type="button">アンケートファイルを保存</button>' +
     (CONFIG.collectUrl ? ' <button class="dl-btn" id="retrySend" type="button">再送信</button>' : '');
-  var b = $('#dlCsv'); if (b) b.addEventListener('click', downloadCsv);
-  var r = $('#retrySend'); if (r) r.addEventListener('click', flushPending);
+  var b = $('#dlCsv'); if (b) b.addEventListener('click', function(){ downloadCsv(); });
+  var d = $('#dlSurvey'); if (d) d.addEventListener('click', function(){ downloadCsv('survey'); });
+  var r = $('#retrySend'); if (r) r.addEventListener('click', function(){ flushPending(); flushSurvey(); });
 }
-$('#opsCsv').addEventListener('click', downloadCsv);
+$('#opsCsv').addEventListener('click', function(){ downloadCsv(); });
 
 /* ---------------- 導入画面 ---------------- */
 function initOnboarding(){
@@ -1440,7 +1443,7 @@ function initOnboarding(){
     $('#obOverlay').style.display = 'none';
     window.scrollTo(0, 0);
     window.addEventListener('beforeunload', function(ev){
-      if (Object.keys(state.answers).length < EMAILS.length){ ev.preventDefault(); ev.returnValue = ''; }
+      if (Object.keys(state.answers).length < EMAILS.length || !state.surveyDone){ ev.preventDefault(); ev.returnValue = ''; }
     });
   });
 }
@@ -1457,6 +1460,76 @@ function initOnboarding(){
   ov.addEventListener('click', function(ev){ if (ev.target === ov) closeHelp(); });
   document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape') closeHelp(); });
 })();
+
+/* ---------------- 演習後アンケート(30件回答後に表示) ----------------
+   属性1問 + 意識度5問(1〜5)。全て必須。送信先は別シート survey(参加者1人=1行)。
+   Q4は逆転項目(分析時に反転)。生の値をそのまま記録する。 */
+var SURVEY_COLS = ['timestamp','participantId','company','setId','mode','buildId','attribute','attributeOther','q1','q2','q3','q4','q5'];
+var SURVEY_QS = [
+  '普段から、不審なメールかもしれないと意識してメールを確認している',
+  'フィッシングメールと安全なメールを、自分は見分けられると思う',
+  '今回の演習で、AIの判定を信頼して回答した',
+  '今回の演習では、AIの判定に頼らず、自分で確かめて判断した',
+  'この演習を通じて、メールを確認するときに注意すべき点が分かった'
+];
+var surveySending = false;
+function showSurvey(){
+  if ($('#svOverlay')) { $('#svOverlay').style.display = 'flex'; return; }
+  var st = document.createElement('style');
+  st.textContent = '.sv-q{margin:18px 0 6px; font-size:14px; line-height:1.7; font-weight:700;} .sv-scale{display:flex; gap:8px; flex-wrap:wrap; margin:6px 0;}' +
+    '.sv-scale label,.sv-opts label{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px; color:var(--muted); cursor:pointer; min-width:56px; padding:8px 6px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2);}' +
+    '.sv-opts{display:flex; gap:8px; flex-wrap:wrap; margin:6px 0;} .sv-opts label{flex-direction:row; min-width:0; padding:8px 14px; font-size:14px; color:var(--text,#222);}' +
+    '.sv-ends{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); max-width:420px;}';
+  document.head.appendChild(st);
+  var h = '<div class="ob-card"><h1>最後に、アンケートにご協力ください</h1><p class="ob-sub">すべての項目にお答えください(所要時間:約1分)</p>';
+  h += '<div class="sv-q">あなたの現在の立場を選んでください</div><div class="sv-opts">' +
+    ['学生','社会人','その他'].map(function(v){ return '<label><input type="radio" name="attr" value="'+v+'"> '+v+'</label>'; }).join('') + '</div>' +
+    '<input type="text" id="svOther" maxlength="100" placeholder="立場を記述してください" style="display:none; width:100%; max-width:320px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px;">';
+  SURVEY_QS.forEach(function(q, i){
+    h += '<div class="sv-q">Q'+(i+1)+'. '+q+'</div><div class="sv-scale">' +
+      [1,2,3,4,5].map(function(n){ return '<label><input type="radio" name="q'+(i+1)+'" value="'+n+'">'+n+'</label>'; }).join('') +
+      '</div><div class="sv-ends"><span>全くそう思わない</span><span>非常にそう思う</span></div>';
+  });
+  h += '<div class="ob-form"><button class="ob-start" id="svSubmit" type="button" disabled>送信して終了する</button></div></div>';
+  var ov = document.createElement('div'); ov.className = 'ob-overlay'; ov.id = 'svOverlay'; ov.style.zIndex = 95; ov.innerHTML = h;
+  document.body.appendChild(ov);
+  function val(n){ var c = ov.querySelector('input[name='+n+']:checked'); return c ? c.value : ''; }
+  function valid(){
+    var a = val('attr');
+    if (!a || (a === 'その他' && !$('#svOther').value.trim())) return false;
+    for (var i = 1; i <= 5; i++) if (!val('q'+i)) return false;
+    return true;
+  }
+  function sync(){ $('#svOther').style.display = val('attr') === 'その他' ? 'block' : 'none'; $('#svSubmit').disabled = !valid(); }
+  ov.addEventListener('change', sync); $('#svOther').addEventListener('input', sync);
+  $('#svSubmit').addEventListener('click', function(){
+    if (!valid()) return;
+    var rec = { timestamp: new Date().toISOString(), participantId: state.participantId, company: CONFIG.company, setId: CONFIG.setId,
+      mode: CONFIG.mode, buildId: CONFIG.buildId, attribute: val('attr'), attributeOther: val('attr') === 'その他' ? $('#svOther').value.trim() : '' };
+    for (var i = 1; i <= 5; i++) rec['q'+i] = Number(val('q'+i));
+    var all = loadList(storeKey('sall')); all.push(rec); sSet(storeKey('sall'), JSON.stringify(all));
+    sSet(storeKey('spending'), JSON.stringify(loadList(storeKey('spending')).concat([rec])));
+    state.surveyDone = true; ov.style.display = 'none';
+    flushSurvey(); maybeShowDone();
+  });
+}
+function flushSurvey(){
+  if (!CONFIG.collectUrl || surveySending) { updateSyncNote(); return; }
+  var pend = loadList(storeKey('spending'));
+  if (!pend.length) { updateSyncNote(); return; }
+  surveySending = true; var n = pend.length;
+  fetch(CONFIG.collectUrl, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ sheet: 'survey', records: pend }) })
+    .then(function(){ sSet(storeKey('spending'), JSON.stringify(loadList(storeKey('spending')).slice(n))); })
+    .catch(function(){})
+    .then(function(){ surveySending = false; updateSyncNote(); if (loadList(storeKey('spending')).length && navigator.onLine) setTimeout(flushSurvey, 5000); });
+}
+window.addEventListener('online', flushSurvey);
+function surveyCsvText(){
+  var rows = loadList(storeKey('sall'));
+  function q(v){ v = (v == null ? '' : String(v)); return '"' + v.replace(/"/g, '""') + '"'; }
+  return '﻿' + [SURVEY_COLS.join(',')].concat(rows.map(function(r){ return SURVEY_COLS.map(function(c){ return q(r[c]); }).join(','); })).join('\r\n');
+}
 
 /* ---------------- init ---------------- */
 renderListCol();
