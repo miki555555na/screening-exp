@@ -1367,7 +1367,7 @@ var pausedTotalMs = 0;   // 「演習の進め方」を開いていた累計時�
 var CSV_COLS = ['timestamp','participantId','company','setId','mode','buildId','seq','emailId','trueLabel',
   'aiVerdict','aiWrong','participantAnswer','correct','matchedAI','isFirstAnswer','quizText',
   'wlViewed','blViewed','wlViewCount','blViewCount','dwellMs','presentedPattern',
-  'resourceType','resourceOpened','pdfShown','urlChecked','urlCheckCount','checklistCompleted','userAgent',
+  'resourceType','resourceOpened','pdfShown','urlChecked','urlCheckCount','checklistCompleted',
   'appVersion','openToAnswerMs','interventionMs','aiShown','aiHoverMs'];   // v2で末尾に追加(既存の列の位置は変えない)
 
 /* ---------------- v2: 計測ヘルパー ----------------
@@ -1425,7 +1425,7 @@ function collectAnswer(row, isFirst){
     resourceOpened: hasRes ? yn(!!st.resourceOpened) : '',
     pdfShown: e.pdfFile ? yn(!!st.pdfShown) : '',
     urlChecked: hasRes ? yn((st.urlCheckCount || 0) > 0) : '', urlCheckCount: hasRes ? (st.urlCheckCount || 0) : '',
-    checklistCompleted: a.checklistItems ? yn(!!a.checklistCompleted) : '', userAgent: navigator.userAgent,
+    checklistCompleted: a.checklistItems ? yn(!!a.checklistCompleted) : '',
     appVersion: CONFIG.appVersion, openToAnswerMs: a.openToAnswerMs,
     interventionMs: (state.intv[row] && state.intv[row].ms != null) ? Math.round(state.intv[row].ms) : '',
     aiShown: yn(a.presentedPattern !== 'hidden'),
